@@ -1,0 +1,1628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalanoro Lodge — Project Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --sand: #F5EFE3; --sand-dark: #EDE3D0; --sand-mid: #D8CEBA;
+  --earth: #8B6F47; --earth-dark: #6B5235; --earth-light: #A88B65;
+  --forest: #3D5A3E; --night: #1C1A17; --night-soft: #2E2B26;
+  --mist: #6B6560; --mist-light: #9E9890; --white: #FDFAF5;
+  --danger: #8B3A2F; --danger-light: #F5EAE8;
+  --warning: #8B6B1A; --warning-light: #F5EFDC;
+  --success: #2F5A31; --success-light: #E8F0E8;
+  --info: #1A4B6B; --info-light: #E3EDF5;
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+  --radius: 6px; --radius-lg: 10px;
+  --shadow-sm: 0 1px 3px rgba(28,26,23,0.1);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-body); background: var(--sand); color: var(--night); min-height: 100vh; font-size: 14px; line-height: 1.5; }
+
+.app-header { background: var(--night); color: var(--sand); padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 56px; position: sticky; top: 0; z-index: 100; }
+.app-logo { font-family: var(--font-display); font-size: 18px; font-weight: 500; color: var(--sand); }
+.app-logo span { color: var(--earth-light); }
+
+.sync-bar { display: flex; align-items: center; justify-content: space-between; padding: 9px 32px; font-size: 12px; gap: 12px; transition: background 0.4s; }
+.sync-bar.connecting { background: var(--night-soft); color: var(--mist-light); }
+.sync-bar.live { background: var(--forest); color: #c8e6c9; }
+.sync-bar.error { background: var(--danger); color: #fde8e8; }
+.sync-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 6px; vertical-align: middle; }
+.sync-bar.connecting .sync-dot { background: var(--mist-light); animation: pulse 1.2s infinite; }
+.sync-bar.live .sync-dot { background: #81c784; }
+.sync-bar.error .sync-dot { background: #ef9a9a; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+.tabs-bar { background: var(--night-soft); display: flex; padding: 0 32px; overflow-x: auto; }
+.tab-btn { font-family: var(--font-body); font-size: 13px; color: var(--mist-light); background: none; border: none; padding: 14px 20px; cursor: pointer; border-bottom: 2px solid transparent; transition: color 0.15s, border-color 0.15s; white-space: nowrap; }
+.tab-btn:hover { color: var(--sand); }
+.tab-btn.active { color: var(--sand); border-bottom-color: var(--earth-light); }
+
+.main { padding: 28px 32px; max-width: 1100px; }
+.pane { display: none; } .pane.active { display: block; }
+
+button { font-family: var(--font-body); cursor: pointer; }
+.btn { padding: 8px 16px; border-radius: var(--radius); border: 1px solid var(--sand-mid); background: var(--white); color: var(--night); font-size: 13px; transition: background 0.12s; }
+.btn:hover { background: var(--sand-dark); }
+.btn-primary { background: var(--earth); color: var(--white); border-color: var(--earth); }
+.btn-primary:hover { background: var(--earth-dark); border-color: var(--earth-dark); }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+.btn-danger { background: var(--danger-light); color: var(--danger); border-color: transparent; }
+.btn-danger:hover { background: #edd5d2; }
+.delete-x { background: none; border: none; color: var(--mist); font-size: 16px; line-height: 1; padding: 2px 4px; cursor: pointer; border-radius: 3px; }
+.delete-x:hover { color: var(--danger); background: var(--danger-light); }
+
+.card { background: var(--white); border: 1px solid var(--sand-mid); border-radius: var(--radius-lg); padding: 20px 24px; box-shadow: var(--shadow-sm); }
+.card + .card { margin-top: 10px; }
+.card-sm { background: var(--sand); border: 1px solid var(--sand-mid); border-radius: var(--radius); padding: 12px 16px; }
+
+.form-section { background: var(--white); border: 1px solid var(--sand-mid); border-top: 3px solid var(--earth); border-radius: var(--radius-lg); padding: 20px 24px; margin-bottom: 16px; box-shadow: var(--shadow-sm); }
+.form-title { font-family: var(--font-display); font-size: 16px; font-weight: 500; margin-bottom: 16px; color: var(--earth-dark); }
+label { font-size: 12px; color: var(--mist); font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; display: block; margin-bottom: 4px; }
+input, select, textarea { font-family: var(--font-body); font-size: 13px; color: var(--night); background: var(--white); border: 1px solid var(--sand-mid); border-radius: var(--radius); padding: 8px 12px; width: 100%; transition: border-color 0.15s; }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--earth-light); }
+textarea { resize: vertical; min-height: 72px; }
+.fg { margin-bottom: 14px; }
+.fg-row { display: grid; gap: 12px; margin-bottom: 14px; }
+.fg-row.col2 { grid-template-columns: 1fr 1fr; }
+.fg-row.col3 { grid-template-columns: 1fr 1fr 1fr; }
+.fg-row.col4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+.form-actions { display: flex; gap: 8px; margin-top: 4px; }
+select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236B6560'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; appearance: none; }
+
+.badge { display: inline-block; font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 20px; }
+.badge-quote { background: #f0ebf8; color: #5a3580; }
+.badge-ordered { background: var(--warning-light); color: var(--warning); }
+.badge-transit { background: var(--info-light); color: var(--info); }
+.badge-arrived { background: var(--success-light); color: var(--success); }
+.badge-high { background: var(--danger-light); color: var(--danger); }
+.badge-medium { background: var(--warning-light); color: var(--warning); }
+.badge-low { background: var(--sand-dark); color: var(--mist); }
+
+.section-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.section-title { font-family: var(--font-display); font-size: 22px; font-weight: 500; }
+.section-sub { font-size: 13px; color: var(--mist); margin-top: 2px; }
+
+.metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+.metric { background: var(--white); border: 1px solid var(--sand-mid); border-radius: var(--radius-lg); padding: 18px 20px; box-shadow: var(--shadow-sm); }
+.metric-label { font-size: 11px; color: var(--mist); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 500; margin-bottom: 6px; }
+.metric-val { font-family: var(--font-display); font-size: 28px; font-weight: 500; line-height: 1; }
+.metric-sub { font-size: 12px; color: var(--mist); margin-top: 4px; }
+.dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.prog-bar { height: 5px; background: var(--sand-dark); border-radius: 3px; overflow: hidden; margin-top: 5px; }
+.prog-fill { height: 100%; background: var(--earth); border-radius: 3px; }
+.transit-pill { font-size: 11px; background: var(--info-light); color: var(--info); padding: 2px 8px; border-radius: 20px; white-space: nowrap; font-family: var(--font-mono); }
+
+.room-card { background: var(--white); border: 1px solid var(--sand-mid); border-radius: var(--radius-lg); margin-bottom: 10px; box-shadow: var(--shadow-sm); overflow: hidden; }
+.room-hdr { display: flex; align-items: center; gap: 10px; padding: 16px 20px; cursor: pointer; user-select: none; transition: background 0.1s; }
+.room-hdr:hover { background: var(--sand); }
+.room-arrow { font-size: 12px; color: var(--mist); transition: transform 0.2s; display: inline-block; }
+.room-arrow.open { transform: rotate(90deg); }
+.room-name { font-family: var(--font-display); font-size: 16px; font-weight: 500; flex: 1; }
+.room-meta { font-size: 12px; color: var(--mist); }
+.room-body { border-top: 1px solid var(--sand-mid); padding: 16px 20px; }
+.meas-grid { display: grid; grid-template-columns: 2fr 2fr 80px 80px 80px 28px; gap: 8px; align-items: center; }
+.meas-hdr-row { font-size: 11px; color: var(--mist); font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; padding-bottom: 6px; border-bottom: 1px solid var(--sand-mid); margin-bottom: 4px; }
+.meas-row { padding: 5px 0; border-bottom: 1px solid var(--sand); }
+.meas-row:last-child { border-bottom: none; }
+.meas-row input { font-size: 12px; padding: 5px 8px; background: var(--sand); border-color: transparent; }
+.meas-row input:focus { background: var(--white); border-color: var(--earth-light); }
+
+.order-card { background: var(--white); border: 1px solid var(--sand-mid); border-left: 3px solid transparent; border-radius: var(--radius-lg); padding: 16px 20px; margin-bottom: 8px; box-shadow: var(--shadow-sm); }
+.order-card.status-Quote { border-left-color: #9b6dcb; }
+.order-card.status-Ordered { border-left-color: var(--warning); }
+.order-card.status-In-transit { border-left-color: var(--info); }
+.order-card.status-Arrived { border-left-color: var(--success); }
+.order-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.order-name { font-weight: 500; font-size: 14px; margin-bottom: 5px; }
+.order-meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.order-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+.order-budget { font-family: var(--font-mono); font-size: 13px; font-weight: 500; color: var(--earth-dark); }
+
+.supplier-card { background: var(--white); border: 1px solid var(--sand-mid); border-radius: var(--radius-lg); padding: 18px 22px; margin-bottom: 10px; box-shadow: var(--shadow-sm); }
+.supplier-top { display: flex; justify-content: space-between; align-items: flex-start; }
+.supplier-name { font-family: var(--font-display); font-size: 17px; font-weight: 500; }
+.supplier-loc { font-size: 12px; color: var(--mist); margin-top: 2px; }
+.supplier-details { margin-top: 12px; display: flex; gap: 24px; flex-wrap: wrap; }
+.supplier-detail { font-size: 13px; color: var(--mist); }
+.supplier-detail strong { color: var(--night); font-weight: 500; }
+.supplier-route { margin-top: 10px; font-size: 12px; color: var(--info); font-family: var(--font-mono); background: var(--info-light); padding: 5px 10px; border-radius: var(--radius); display: inline-block; }
+.supplier-notes { margin-top: 8px; font-size: 12px; color: var(--mist); font-style: italic; }
+.tag-cat { display: inline-block; font-size: 11px; background: var(--sand-dark); color: var(--mist); padding: 2px 8px; border-radius: 20px; }
+
+.mood-filter-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+.filter-chip { font-size: 12px; background: var(--white); border: 1px solid var(--sand-mid); border-radius: 20px; padding: 4px 12px; cursor: pointer; color: var(--mist); transition: all 0.12s; }
+.filter-chip:hover, .filter-chip.active { background: var(--earth); color: var(--white); border-color: var(--earth); }
+.mood-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+.mood-card { background: var(--white); border: 1px solid var(--sand-mid); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm); }
+.mood-img { width: 100%; height: 160px; object-fit: cover; display: block; }
+.mood-placeholder { width: 100%; height: 160px; background: var(--sand-dark); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: var(--mist); font-size: 13px; }
+.mood-body { padding: 12px 14px; }
+.mood-title { font-weight: 500; font-size: 13px; }
+.mood-room { font-size: 11px; color: var(--mist); margin-top: 2px; }
+.mood-notes { font-size: 12px; color: var(--mist); margin-top: 6px; }
+.mood-actions { display: flex; justify-content: flex-end; padding: 0 14px 10px; }
+
+.snag-item { display: flex; align-items: flex-start; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--sand); }
+.snag-item:last-child { border-bottom: none; }
+.snag-check { width: 18px; height: 18px; cursor: pointer; flex-shrink: 0; accent-color: var(--forest); margin-top: 1px; }
+.snag-content { flex: 1; }
+.snag-desc { font-size: 14px; margin-bottom: 4px; }
+.snag-desc.done { text-decoration: line-through; color: var(--mist); }
+.snag-meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+.setup-overlay { position: fixed; inset: 0; background: rgba(28,26,23,0.88); z-index: 999; display: flex; align-items: center; justify-content: center; }
+.setup-box { background: var(--white); border-radius: var(--radius-lg); padding: 36px 40px; max-width: 560px; width: 90%; }
+.setup-box h2 { font-family: var(--font-display); font-size: 22px; margin-bottom: 10px; }
+.setup-box p { font-size: 13px; color: var(--mist); margin-bottom: 18px; line-height: 1.7; }
+.setup-code { font-family: var(--font-mono); font-size: 11px; background: var(--sand); border: 1px solid var(--sand-mid); border-radius: var(--radius); padding: 12px 14px; display: block; white-space: pre; margin-bottom: 18px; overflow-x: auto; line-height: 1.7; }
+.setup-steps { margin: 0 0 20px; padding-left: 18px; }
+.setup-steps li { font-size: 13px; color: var(--mist); margin-bottom: 10px; line-height: 1.6; }
+.setup-steps li strong { color: var(--night); }
+
+.empty-state { text-align: center; padding: 40px 20px; color: var(--mist); font-size: 13px; }
+.empty-icon { font-size: 28px; margin-bottom: 8px; opacity: 0.4; }
+
+.currency-btn { background: none; border: 1px solid rgba(255,255,255,0.15); border-radius: var(--radius); padding: 5px 10px; color: var(--sand); font-size: 12px; display: flex; align-items: center; gap: 6px; cursor: pointer; transition: background 0.15s; }
+.currency-btn:hover { background: rgba(255,255,255,0.08); }
+.currency-flag { font-size: 15px; line-height: 1; }
+.currency-dropdown { position: absolute; top: 52px; right: 32px; background: var(--night-soft); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-lg); box-shadow: 0 8px 24px rgba(0,0,0,0.4); z-index: 200; min-width: 220px; overflow: hidden; display: none; }
+.currency-dropdown.open { display: block; }
+.currency-option { display: flex; align-items: center; gap: 10px; padding: 10px 14px; cursor: pointer; font-size: 13px; color: var(--sand); transition: background 0.12s; }
+.currency-option:hover { background: rgba(255,255,255,0.07); }
+.currency-option.active { background: rgba(139,111,71,0.25); color: var(--earth-light); }
+.currency-option-flag { font-size: 18px; }
+.currency-option-name { flex: 1; }
+.currency-option-sym { font-family: var(--font-mono); font-size: 12px; color: var(--mist-light); }
+
+.calc-panel { margin-top: 12px; background: var(--sand); border: 1px solid var(--sand-mid); border-left: 3px solid var(--earth); border-radius: var(--radius-lg); padding: 16px 18px; }
+.calc-panel-title { font-size: 12px; font-weight: 500; color: var(--earth-dark); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
+.calc-row { display: grid; gap: 10px; margin-bottom: 10px; }
+.calc-row.col3 { grid-template-columns: 1fr 1fr 1fr; }
+.calc-row.col2 { grid-template-columns: 1fr 1fr; }
+.calc-result { background: var(--white); border: 1px solid var(--sand-mid); border-radius: var(--radius); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
+.calc-result-label { font-size: 12px; color: var(--mist); }
+.calc-result-val { font-family: var(--font-display); font-size: 20px; font-weight: 500; color: var(--earth-dark); }
+.calc-result-unit { font-size: 12px; color: var(--mist); margin-left: 4px; }
+.calc-actions { display: flex; gap: 8px; margin-top: 12px; align-items: center; }
+.calc-formula { font-size: 11px; color: var(--mist); font-family: var(--font-mono); margin-top: 8px; line-height: 1.6; background: var(--sand-dark); padding: 8px 10px; border-radius: var(--radius); }
+.meas-mat-row { display: grid; grid-template-columns: 2fr 2fr 80px 80px 80px 110px 28px; gap: 8px; align-items: center; }
+.calc-btn { background: var(--earth-light); color: var(--white); border: none; border-radius: var(--radius); padding: 5px 10px; font-size: 11px; cursor: pointer; white-space: nowrap; transition: background 0.12s; }
+.calc-btn:hover { background: var(--earth); }
+.calc-btn.active { background: var(--earth-dark); }
+
+.fab { position: fixed; bottom: 28px; right: 28px; width: 52px; height: 52px; border-radius: 50%; background: var(--earth); color: var(--white); border: none; font-size: 26px; line-height: 1; cursor: pointer; box-shadow: 0 4px 16px rgba(0,0,0,0.25); z-index: 300; display: flex; align-items: center; justify-content: center; transition: background 0.15s, transform 0.15s; }
+.fab:hover { background: var(--earth-dark); transform: scale(1.06); }
+
+.modal-overlay { position: fixed; inset: 0; background: rgba(28,26,23,0.7); z-index: 400; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.modal-overlay.hidden { display: none; }
+.modal-box { background: var(--white); border-radius: var(--radius-lg); padding: 28px 28px 24px; width: 100%; max-width: 440px; box-shadow: 0 16px 48px rgba(0,0,0,0.3); }
+.modal-title { font-family: var(--font-display); font-size: 18px; font-weight: 500; margin-bottom: 18px; color: var(--earth-dark); }
+.modal-actions { display: flex; gap: 8px; margin-top: 20px; justify-content: flex-end; }
+.qa-cat-row { display: flex; gap: 8px; margin-bottom: 14px; }
+.qa-cat { flex: 1; padding: 9px 0; border: 1px solid var(--sand-mid); border-radius: var(--radius); background: var(--white); font-size: 13px; cursor: pointer; text-align: center; color: var(--mist); transition: all 0.12s; }
+.qa-cat:hover { border-color: var(--earth-light); color: var(--night); }
+.qa-cat.active { background: var(--earth); color: var(--white); border-color: var(--earth); }
+
+.photo-strip { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.photo-thumb { width: 72px; height: 72px; object-fit: cover; border-radius: var(--radius); border: 1px solid var(--sand-mid); cursor: pointer; }
+.photo-thumb-wrap { position: relative; display: inline-block; }
+.photo-del { position: absolute; top: -6px; right: -6px; background: var(--danger); color: white; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 11px; line-height: 18px; text-align: center; cursor: pointer; padding: 0; }
+.photo-lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 500; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.photo-lightbox.hidden { display: none; }
+.photo-lightbox img { max-width: 92vw; max-height: 88vh; border-radius: var(--radius); }
+.photo-add-btn { width: 72px; height: 72px; border: 1px dashed var(--sand-mid); border-radius: var(--radius); background: var(--sand); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--mist); font-size: 22px; transition: border-color 0.12s; }
+.photo-add-btn:hover { border-color: var(--earth-light); color: var(--earth); }
+
+.note-card { background: var(--sand); border: 1px solid var(--sand-mid); border-left: 3px solid var(--earth-light); border-radius: var(--radius); padding: 10px 14px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.note-text { font-size: 13px; flex: 1; line-height: 1.5; }
+.note-meta { font-size: 11px; color: var(--mist); margin-top: 3px; display: flex; gap: 8px; }
+.note-time { font-family: var(--font-mono); }
+
+.supplier-contact-bar { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.contact-btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: var(--radius); font-size: 12px; font-weight: 500; text-decoration: none; border: 1px solid var(--sand-mid); background: var(--white); color: var(--night); cursor: pointer; transition: background 0.12s; }
+.contact-btn:hover { background: var(--sand-dark); }
+.contact-btn.whatsapp { border-color: #25d366; color: #1a9e4e; background: #f0fdf4; }
+.contact-btn.whatsapp:hover { background: #dcfce7; }
+.contact-btn.email { border-color: var(--earth-light); color: var(--earth-dark); background: var(--warning-light); }
+.contact-btn.email:hover { background: #ede3c8; }
+
+/* CAMP BUILDER */
+.cb-view { display:none; min-height:100vh; background:var(--sand); }
+.cb-view.active { display:block; }
+.pm-view { display:none; }
+.pm-view.active { display:block; }
+.cb-header { background:var(--night); color:var(--sand); padding:0 32px; display:flex; align-items:center; justify-content:space-between; height:56px; position:sticky; top:0; z-index:100; }
+.cb-logo { font-family:var(--font-display); font-size:18px; font-weight:500; color:var(--sand); }
+.cb-logo span { color:var(--earth-light); }
+.cb-main { padding:32px; max-width:1100px; }
+.cb-section-title { font-family:var(--font-display); font-size:26px; font-weight:500; margin-bottom:6px; }
+.cb-section-sub { font-size:13px; color:var(--mist); margin-bottom:28px; }
+.camp-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px; }
+.camp-card { background:var(--white); border:1px solid var(--sand-mid); border-radius:var(--radius-lg); padding:22px 24px; box-shadow:var(--shadow-sm); cursor:pointer; transition:box-shadow 0.15s,transform 0.12s; position:relative; overflow:hidden; }
+.camp-card:hover { box-shadow:0 4px 16px rgba(28,26,23,0.12); transform:translateY(-1px); }
+.camp-card-accent { position:absolute; top:0; left:0; right:0; height:4px; }
+.camp-card-name { font-family:var(--font-display); font-size:17px; font-weight:500; margin-bottom:3px; margin-top:8px; }
+.camp-card-loc { font-size:12px; color:var(--mist); margin-bottom:14px; }
+.camp-card-stats { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:14px; }
+.camp-stat { background:var(--sand); border-radius:var(--radius); padding:8px 10px; text-align:center; }
+.camp-stat-val { font-family:var(--font-display); font-size:18px; font-weight:500; line-height:1; }
+.camp-stat-label { font-size:10px; color:var(--mist); text-transform:uppercase; letter-spacing:0.04em; margin-top:3px; }
+.camp-status-planning { background:var(--sand-dark); color:var(--mist); display:inline-block; font-size:11px; font-weight:500; padding:3px 10px; border-radius:20px; }
+.camp-status-active { background:var(--success-light); color:var(--success); display:inline-block; font-size:11px; font-weight:500; padding:3px 10px; border-radius:20px; }
+.camp-status-complete { background:var(--info-light); color:var(--info); display:inline-block; font-size:11px; font-weight:500; padding:3px 10px; border-radius:20px; }
+.camp-card-new { border:2px dashed var(--sand-mid); background:transparent; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; min-height:180px; color:var(--mist); transition:border-color 0.15s,color 0.15s; box-shadow:none; }
+.camp-card-new:hover { border-color:var(--earth-light); color:var(--earth); transform:none; box-shadow:none; }
+.camp-delete { position:absolute; top:10px; right:10px; background:none; border:none; color:var(--mist); font-size:16px; cursor:pointer; padding:2px 6px; border-radius:3px; opacity:0; transition:opacity 0.15s; }
+.camp-card:hover .camp-delete { opacity:1; }
+.camp-delete:hover { color:var(--danger); background:var(--danger-light); }
+.swatch-row { display:flex; gap:8px; flex-wrap:wrap; margin-top:4px; }
+.swatch { width:26px; height:26px; border-radius:50%; cursor:pointer; border:3px solid transparent; transition:transform 0.1s,border-color 0.1s; }
+.swatch:hover { transform:scale(1.15); }
+.swatch.selected { border-color:var(--night); }
+/* TUTORIAL */
+.tutorial-overlay { position:fixed; inset:0; background:rgba(28,26,23,0.75); z-index:600; display:flex; align-items:center; justify-content:center; padding:20px; }
+.tutorial-overlay.hidden { display:none; }
+.tutorial-box { background:var(--white); border-radius:var(--radius-lg); padding:32px; max-width:480px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,0.3); }
+.tutorial-icon { font-size:32px; margin-bottom:14px; }
+.tutorial-title { font-family:var(--font-display); font-size:20px; font-weight:500; margin-bottom:10px; color:var(--earth-dark); }
+.tutorial-body { font-size:13px; color:var(--mist); line-height:1.8; margin-bottom:20px; }
+.tutorial-body strong { color:var(--night); font-weight:500; }
+.tutorial-footer { display:flex; justify-content:space-between; align-items:center; }
+.tutorial-skip-label { font-size:12px; color:var(--mist); display:flex; align-items:center; gap:6px; cursor:pointer; }
+.tutorial-skip-label input { cursor:pointer; accent-color:var(--earth); }
+/* TOOLTIP */
+.tooltip-wrap { position:relative; display:inline-flex; align-items:center; }
+.tooltip-q { width:15px; height:15px; border-radius:50%; background:var(--sand-dark); color:var(--mist); font-size:10px; font-weight:600; display:inline-flex; align-items:center; justify-content:center; cursor:help; margin-left:5px; flex-shrink:0; }
+.tooltip-q:hover + .tooltip-tip { display:block; }
+.tooltip-tip { display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--night); color:var(--sand); font-size:11px; line-height:1.5; padding:8px 10px; border-radius:var(--radius); width:200px; z-index:50; pointer-events:none; white-space:normal; }
+.tooltip-tip::after { content:''; position:absolute; top:100%; left:50%; transform:translateX(-50%); border:5px solid transparent; border-top-color:var(--night); }
+
+@media (max-width: 700px) {
+  .main { padding: 16px; }
+  .app-header, .sync-bar, .tabs-bar { padding-left: 16px; padding-right: 16px; }
+  .metric-grid { grid-template-columns: 1fr 1fr; }
+  .dash-grid { grid-template-columns: 1fr; }
+  .fg-row.col2, .fg-row.col3, .fg-row.col4 { grid-template-columns: 1fr; }
+  .meas-grid { grid-template-columns: 1fr 1fr 60px 60px 60px 24px; }
+  .meas-mat-row { grid-template-columns: 1fr 1fr; gap: 6px; }
+  .meas-mat-row.meas-hdr-row { display: none; }
+  .meas-mat-row.meas-row input, .meas-mat-row.meas-row select { font-size: 12px; }
+  .meas-mat-row .delete-x { grid-column: 2; justify-self: end; }
+  .order-top { flex-direction: column; gap: 8px; }
+  .order-right { flex-direction: row; align-items: center; flex-wrap: wrap; }
+  .supplier-details { flex-direction: column; gap: 8px; }
+  .camp-grid { grid-template-columns: 1fr; }
+  .cb-main { padding: 16px; }
+  .cb-header { padding: 0 16px; }
+  .camp-card-stats { grid-template-columns: 1fr 1fr 1fr; }
+  .calc-row.col3 { grid-template-columns: 1fr 1fr; }
+  .modal-box { padding: 20px; }
+  .tabs-bar { gap: 0; }
+  .tab-btn { padding: 14px 12px; font-size: 12px; }
+}
+</style>
+</head>
+<body>
+
+<!-- SETUP OVERLAY -->
+<div class="setup-overlay" id="setup-overlay" style="display:none">
+  <div class="setup-box">
+    <h2>One-time Supabase setup</h2>
+    <p>The database table doesn't exist yet. This takes about 60 seconds to fix:</p>
+    <ol class="setup-steps">
+      <li>Go to <strong>supabase.com</strong> → your project → <strong>SQL Editor</strong> (left sidebar)</li>
+      <li>Paste and run this SQL:</li>
+    </ol>
+    <code class="setup-code">CREATE TABLE IF NOT EXISTS lodge_state (
+  id INTEGER PRIMARY KEY DEFAULT 1,
+  data JSONB NOT NULL DEFAULT '{}',
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+INSERT INTO lodge_state (id, data)
+VALUES (1, '{}')
+ON CONFLICT (id) DO NOTHING;
+
+ALTER TABLE lodge_state ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "allow_all" ON lodge_state
+FOR ALL USING (true) WITH CHECK (true);</code>
+    <ol class="setup-steps" start="3">
+      <li>Also go to <strong>Database → Replication</strong> and enable replication for the <strong>lodge_state</strong> table so live sync works</li>
+      <li>Come back here and click Retry</li>
+    </ol>
+    <button class="btn btn-primary" onclick="retryConnection()">Retry connection</button>
+  </div>
+</div>
+
+<!-- CAMP BUILDER -->
+<div class="cb-view active" id="cb-view">
+  <header class="cb-header">
+    <div class="cb-logo">Camp <span>Builder</span></div>
+    <button onclick="showTutorial('cb')" style="background:none;border:1px solid rgba(255,255,255,0.15);border-radius:var(--radius);padding:5px 10px;color:var(--sand);font-size:11px;cursor:pointer">? How to use</button>
+  </header>
+  <div class="cb-main">
+    <div class="cb-section-title">Your camps</div>
+    <div class="cb-section-sub">Select a camp to open its project manager, or create a new one.</div>
+    <div class="camp-grid" id="camp-grid"></div>
+  </div>
+</div>
+
+<!-- NEW CAMP MODAL -->
+<div class="modal-overlay hidden" id="nc-modal">
+  <div class="modal-box">
+    <div class="modal-title">New camp</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+      <div class="fg"><label>Camp name</label><input id="nc-name" placeholder="e.g. Kalanoro Lodge" autocomplete="off"></div>
+      <div class="fg"><label>Location</label><input id="nc-loc" placeholder="e.g. Hwange, Zimbabwe" autocomplete="off"></div>
+    </div>
+    <div class="fg" style="margin-bottom:14px">
+      <label>Status</label>
+      <select id="nc-status"><option value="planning">Planning</option><option value="active" selected>Active</option><option value="complete">Complete</option></select>
+    </div>
+    <div class="fg" style="margin-bottom:20px">
+      <label>Accent colour</label>
+      <div class="swatch-row" id="nc-swatches">
+        <div class="swatch selected" data-color="#8B6F47" style="background:#8B6F47" onclick="selectSwatch(this)"></div>
+        <div class="swatch" data-color="#3D5A3E" style="background:#3D5A3E" onclick="selectSwatch(this)"></div>
+        <div class="swatch" data-color="#1A4B6B" style="background:#1A4B6B" onclick="selectSwatch(this)"></div>
+        <div class="swatch" data-color="#8B3A2F" style="background:#8B3A2F" onclick="selectSwatch(this)"></div>
+        <div class="swatch" data-color="#5A4A7A" style="background:#5A4A7A" onclick="selectSwatch(this)"></div>
+        <div class="swatch" data-color="#2F6B5A" style="background:#2F6B5A" onclick="selectSwatch(this)"></div>
+        <div class="swatch" data-color="#6B4A1A" style="background:#6B4A1A" onclick="selectSwatch(this)"></div>
+        <div class="swatch" data-color="#1C4A3A" style="background:#1C4A3A" onclick="selectSwatch(this)"></div>
+      </div>
+    </div>
+    <div class="fg" style="margin-bottom:14px">
+      <label>Project currency</label>
+      <select id="nc-currency">
+        <option value="USD|$">Zimbabwe — USD $</option>
+        <option value="ZAR|R">South Africa — ZAR R</option>
+        <option value="BWP|P">Botswana — BWP P</option>
+        <option value="MZN|MT">Mozambique — MZN MT</option>
+        <option value="ZMW|K">Zambia — ZMW K</option>
+        <option value="NAD|N$">Namibia — NAD N$</option>
+        <option value="SZL|E">Eswatini — SZL E</option>
+        <option value="LSL|M">Lesotho — LSL M</option>
+      </select>
+    </div>
+    <div class="fg" style="margin-bottom:20px">
+      <label style="display:flex;align-items:center">Exchange rate to USD <span class="tooltip-wrap"><span class="tooltip-q">?</span><span class="tooltip-tip">Optional. Enter how many units of your currency equal 1 USD. E.g. if 1 USD = 18.5 ZAR, enter 18.5. Used to show USD equivalent on dashboard.</span></span></label>
+      <input id="nc-rate" type="number" step="any" placeholder="e.g. 18.5 — leave blank if using USD">
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeNCModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="createCamp()">Create camp</button>
+    </div>
+  </div>
+</div>
+
+<div class="pm-view" id="pm-view">
+<header class="app-header">
+  <div style="display:flex;align-items:center;gap:14px">
+    <button onclick="returnToDashboard()" style="background:none;border:none;color:var(--mist-light);font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px;padding:0" onmouseover="this.style.color='var(--sand)'" onmouseout="this.style.color='var(--mist-light)'"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 4l-6 6 6 6"/></svg> Camps</button>
+    <div class="app-logo" id="pm-camp-name">Camp <span>&#8212; Interior PM</span></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <span id="pm-currency-indicator" style="font-size:11px;color:var(--mist-light);font-family:var(--font-mono);padding:4px 8px;border:1px solid rgba(255,255,255,0.1);border-radius:var(--radius)">USD $</span>
+    <button onclick="showTutorial('pm')" style="background:none;border:1px solid rgba(255,255,255,0.15);border-radius:var(--radius);padding:4px 9px;color:var(--mist-light);font-size:11px;cursor:pointer" onmouseover="this.style.color='var(--sand)'" onmouseout="this.style.color='var(--mist-light)'">? Help</button>
+    <span id="last-saved" style="font-size:12px;color:var(--mist-light)"></span>
+
+  </div>
+</header>
+
+<div class="sync-bar live" id="sync-bar">
+  <div style="display:flex;align-items:center">
+    <span class="sync-dot"></span>
+    <span id="sync-label">Saved locally — data persists in this browser</span>
+  </div>
+  <span id="sync-right" style="opacity:0.7">Supabase sync available in Phase 2</span>
+</div>
+
+<nav class="tabs-bar">
+  <button class="tab-btn active" onclick="switchTab('dashboard')">Dashboard</button>
+  <button class="tab-btn" onclick="switchTab('rooms')">Rooms</button>
+  <button class="tab-btn" onclick="switchTab('orders')">Orders</button>
+  <button class="tab-btn" onclick="switchTab('suppliers')">Suppliers</button>
+  <button class="tab-btn" onclick="switchTab('gallery')">Gallery</button>
+  <button class="tab-btn" onclick="switchTab('snags')">Snag list</button>
+</nav>
+
+<div class="main">
+
+<div id="pane-dashboard" class="pane active">
+  <div class="section-hdr">
+    <div><div class="section-title">Overview</div><div class="section-sub" id="dash-date"></div></div>
+  </div>
+  <div class="metric-grid" id="metrics"></div>
+  <div class="dash-grid">
+    <div class="card"><div style="font-family:var(--font-display);font-size:15px;font-weight:500;margin-bottom:14px">Orders by stage</div><div id="dash-orders"></div></div>
+    <div class="card"><div style="font-family:var(--font-display);font-size:15px;font-weight:500;margin-bottom:14px">Shipping pipeline</div><div id="dash-transit"></div></div>
+  </div>
+  <div class="card" style="margin-bottom:16px">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
+      <div style="font-family:var(--font-display);font-size:15px;font-weight:500">Budget by room</div>
+      <div id="dash-budget-total" style="font-family:var(--font-display);font-size:22px;font-weight:500;color:var(--earth-dark)"></div>
+    </div>
+    <div id="dash-budget-converted" style="font-size:11px;color:var(--mist);margin-bottom:14px;font-family:var(--font-mono)"></div>
+    <div id="dash-budget"></div>
+  </div>
+  <div class="card"><div style="font-family:var(--font-display);font-size:15px;font-weight:500;margin-bottom:14px">Open snags</div><div id="dash-snags"></div></div>
+  <div class="card" style="margin-top:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div style="font-family:var(--font-display);font-size:15px;font-weight:500">Site notes</div>
+    </div>
+    <div id="dash-notes"></div>
+  </div>
+</div>
+
+<div id="pane-rooms" class="pane">
+  <div class="section-hdr">
+    <div><div class="section-title">Rooms & Measurements</div><div class="section-sub">Track every nook, dimension, and detail</div></div>
+    <button class="btn btn-primary" onclick="toggleForm('form-add-room')">+ Add room</button>
+  </div>
+  <div id="form-add-room" class="form-section" style="display:none">
+    <div class="form-title">New room / area</div>
+    <div class="fg-row col2">
+      <div class="fg"><label>Room name</label><input id="nr-name" placeholder="e.g. Dining area, Suite 3 bathroom"></div>
+      <div class="fg"><label>Notes</label><input id="nr-notes" placeholder="General notes about this space"></div>
+    </div>
+    <div class="form-actions"><button class="btn btn-primary" onclick="addRoom()">Add room</button><button class="btn" onclick="toggleForm('form-add-room')">Cancel</button></div>
+  </div>
+  <div id="rooms-list"></div>
+</div>
+
+<div id="pane-orders" class="pane">
+  <div class="section-hdr">
+    <div><div class="section-title">Orders Tracker</div><div class="section-sub">Quote → Ordered → In transit → Arrived</div></div>
+    <button class="btn btn-primary" onclick="toggleForm('form-add-order')">+ Add order</button>
+  </div>
+  <div id="form-add-order" class="form-section" style="display:none">
+    <div class="form-title">New order</div>
+    <div class="fg-row col2">
+      <div class="fg"><label>Item name</label><input id="no-name" placeholder="e.g. Teak dining table x1"></div>
+      <div class="fg"><label>Supplier</label><select id="no-supplier"><option value="">— select supplier —</option></select></div>
+    </div>
+    <div class="fg-row col4">
+      <div class="fg"><label>Room</label><select id="no-room"><option value="">— select room —</option></select></div>
+      <div class="fg"><label>Status</label><select id="no-status"><option>Quote</option><option>Ordered</option><option>In transit</option><option>Arrived</option></select></div>
+      <div class="fg"><label>Budget (USD)</label><input id="no-budget" type="number" placeholder="0"></div>
+      <div class="fg"><label>ETA</label><input id="no-eta" type="date"></div>
+    </div>
+    <div class="fg"><label>Notes</label><input id="no-notes" placeholder="Any details, reference numbers..."></div>
+    <div class="form-actions"><button class="btn btn-primary" onclick="addOrder()">Add order</button><button class="btn" onclick="toggleForm('form-add-order')">Cancel</button></div>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+    <input id="order-search" placeholder="Search orders..." style="max-width:220px;font-size:13px;padding:7px 12px" oninput="renderOrders()">
+    <div class="mood-filter-bar" id="order-filter-bar" style="margin-bottom:0">
+      <button class="filter-chip active" onclick="setOrderFilter('all',this)">All</button>
+      <button class="filter-chip" onclick="setOrderFilter('Quote',this)">Quote</button>
+      <button class="filter-chip" onclick="setOrderFilter('Ordered',this)">Ordered</button>
+      <button class="filter-chip" onclick="setOrderFilter('In transit',this)">In transit</button>
+      <button class="filter-chip" onclick="setOrderFilter('Arrived',this)">Arrived</button>
+    </div>
+  </div>
+  <div id="orders-list"></div>
+</div>
+
+<div id="pane-suppliers" class="pane">
+  <div class="section-hdr">
+    <div><div class="section-title">Supplier Directory</div><div class="section-sub">Contacts, routes & transit times to camp</div></div>
+    <button class="btn btn-primary" onclick="toggleForm('form-add-supplier')">+ Add supplier</button>
+  </div>
+  <div id="form-add-supplier" class="form-section" style="display:none">
+    <div class="form-title">New supplier</div>
+    <div class="fg-row col2">
+      <div class="fg"><label>Company name</label><input id="ns-name" placeholder="e.g. Durban Home Imports"></div>
+      <div class="fg"><label>Category</label><select id="ns-cat"><option>Furniture</option><option>Textiles</option><option>Lighting</option><option>Art & decor</option><option>Structural</option><option>Plumbing & fittings</option><option>Other</option></select></div>
+    </div>
+    <div class="fg-row col3">
+      <div class="fg"><label>Contact person</label><input id="ns-contact" placeholder="Name"></div>
+      <div class="fg"><label>Email</label><input id="ns-email" placeholder="email@example.com"></div>
+      <div class="fg"><label>Phone / WhatsApp</label><input id="ns-phone" placeholder="+27 ..."></div>
+    </div>
+    <div class="fg-row col3">
+      <div class="fg"><label>Origin city</label><input id="ns-location" placeholder="e.g. Durban, Cape Town"></div>
+      <div class="fg"><label>Transit to camp (days)</label><input id="ns-transit" type="number" placeholder="e.g. 21"></div>
+      <div class="fg"><label>Shipping route</label><input id="ns-route" placeholder="e.g. Durban → Toamasina → truck to camp"></div>
+    </div>
+    <div class="fg"><label>Notes (payment terms, lead times, reliability)</label><textarea id="ns-notes" placeholder="30-day payment terms, 6-week lead time on custom orders..."></textarea></div>
+    <div class="form-actions"><button class="btn btn-primary" onclick="addSupplier()">Add supplier</button><button class="btn" onclick="toggleForm('form-add-supplier')">Cancel</button></div>
+  </div>
+  <input id="supplier-search" placeholder="Search suppliers..." style="max-width:260px;font-size:13px;padding:7px 12px;margin-bottom:14px;display:block" oninput="renderSuppliers()">
+  <div id="suppliers-list"></div>
+</div>
+
+<div id="pane-gallery" class="pane">
+  <div class="section-hdr">
+    <div><div class="section-title">Gallery</div><div class="section-sub">Site photos, renders and visual references by room</div></div>
+    <button class="btn btn-primary" onclick="toggleForm('form-add-mood')">+ Upload image</button>
+  </div>
+  <div id="form-add-mood" class="form-section" style="display:none">
+    <div class="form-title">Add image</div>
+    <div class="fg-row col2">
+      <div class="fg"><label>Room</label><select id="nm-room"><option value="">— select room —</option></select></div>
+      <div class="fg"><label>Title</label><input id="nm-title" placeholder="e.g. North wall — warm palette concept"></div>
+    </div>
+    <div class="fg"><label>Image file (jpg, png, webp)</label><input type="file" id="nm-file" accept="image/*"></div>
+    <div class="fg"><label>Notes</label><textarea id="nm-notes" placeholder="What are you exploring in this render?"></textarea></div>
+    <div class="form-actions"><button class="btn btn-primary" onclick="addMoodImage()">Add image</button><button class="btn" onclick="toggleForm('form-add-mood')">Cancel</button></div>
+  </div>
+  <div class="mood-filter-bar" id="mood-filter-bar"><button class="filter-chip active" onclick="setMoodFilter('all',this)">All rooms</button></div>
+  <div class="mood-grid" id="mood-grid"></div>
+</div>
+
+<div id="pane-snags" class="pane">
+  <div class="section-hdr">
+    <div><div class="section-title">Snag List</div><div class="section-sub">Punch list — issues to fix before handover</div></div>
+    <button class="btn btn-primary" onclick="toggleForm('form-add-snag')">+ Add snag</button>
+  </div>
+  <div class="mood-filter-bar" id="snag-assignee-bar" style="margin-bottom:12px"></div>
+  <div id="form-add-snag" class="form-section" style="display:none">
+    <div class="form-title">New snag / issue</div>
+    <div class="fg-row col2">
+      <div class="fg"><label>Description</label><input id="sn-desc" placeholder="What needs fixing?"></div>
+      <div class="fg"><label>Room</label><select id="sn-room"><option value="">— select room —</option></select></div>
+    </div>
+    <div class="fg-row col2">
+      <div class="fg"><label>Priority</label><select id="sn-priority"><option>Low</option><option selected>Medium</option><option>High</option></select></div>
+      <div class="fg"><label>Assigned to</label><input id="sn-assign" placeholder="Name"></div>
+    </div>
+    <div class="form-actions"><button class="btn btn-primary" onclick="addSnag()">Add snag</button><button class="btn" onclick="toggleForm('form-add-snag')">Cancel</button></div>
+  </div>
+  <div class="card" style="margin-bottom:12px">
+    <div style="font-family:var(--font-display);font-size:15px;font-weight:500;margin-bottom:12px">Open <span id="snag-open-count" style="font-size:13px;color:var(--mist);font-family:var(--font-body)"></span></div>
+    <div id="snag-list-open"></div>
+  </div>
+  <div class="card">
+    <div style="font-family:var(--font-display);font-size:15px;font-weight:500;margin-bottom:12px;color:var(--mist)">Resolved</div>
+    <div id="snag-list-done"></div>
+  </div>
+</div>
+
+</div>
+
+<script>
+// CURRENCY
+const CURRENCIES = [
+  {code:'USD',sym:'$',country:'Zimbabwe'},
+  {code:'ZAR',sym:'R',country:'South Africa'},
+  {code:'BWP',sym:'P',country:'Botswana'},
+  {code:'MZN',sym:'MT',country:'Mozambique'},
+  {code:'ZMW',sym:'K',country:'Zambia'},
+  {code:'NAD',sym:'N$',country:'Namibia'},
+  {code:'SZL',sym:'E',country:'Eswatini'},
+  {code:'LSL',sym:'M',country:'Lesotho'},
+];
+let currency = JSON.parse(localStorage.getItem('lodge_currency') || '{"code":"USD","sym":"$","flag":"&#x1F1FF;&#x1F1FC;","country":"Zimbabwe"}');
+
+function toggleCurrencyDropdown() {
+  // Currency is now set per-camp — edit via camp settings (gear icon)
+}
+function setCurrency(code, sym, flag, country) {
+  currency = {code, sym, flag, country};
+  localStorage.setItem('lodge_currency', JSON.stringify(currency));
+  renderOrders();
+  renderDashboard();
+}
+// Currency dropdown removed — currency is per-camp
+
+// MATERIAL CALCULATOR CONFIG
+const MAT_CONFIG = {
+  flooring: {
+    label: 'Flooring',
+    unit: 'm²',
+    inputs: [{id:'waste', label:'Waste factor (%)', default:10}],
+    calc: (m, inputs) => {
+      if (!m.l || !m.w) return null;
+      const area = m.l * m.w;
+      const waste = 1 + (inputs.waste / 100);
+      const qty = area * waste;
+      return {qty: qty.toFixed(2), unit: 'm²', formula: `${m.l}m × ${m.w}m = ${area.toFixed(2)}m² + ${inputs.waste}% waste = ${qty.toFixed(2)}m²`};
+    }
+  },
+  tiles: {
+    label: 'Tiles',
+    unit: 'm²',
+    inputs: [{id:'waste', label:'Waste factor (%)', default:15}, {id:'tileSize', label:'Tile size (cm)', default:60}],
+    calc: (m, inputs) => {
+      if (!m.l || !m.w) return null;
+      const area = m.l * m.w;
+      const waste = 1 + (inputs.waste / 100);
+      const qty = area * waste;
+      const tileArea = (inputs.tileSize / 100) * (inputs.tileSize / 100);
+      const count = Math.ceil(qty / tileArea);
+      return {qty: qty.toFixed(2), unit: 'm²', formula: `${m.l}m × ${m.w}m = ${area.toFixed(2)}m² + ${inputs.waste}% waste = ${qty.toFixed(2)}m² ≈ ${count} tiles (${inputs.tileSize}cm)`};
+    }
+  },
+  paint: {
+    label: 'Paint',
+    unit: 'litres',
+    inputs: [{id:'coverage', label:'Coverage (m²/litre)', default:10}, {id:'coats', label:'Coats', default:2}, {id:'doors', label:'Door/window deductions (m²)', default:4}],
+    calc: (m, inputs) => {
+      if (!m.l || !m.w || !m.h) return null;
+      const wallArea = (2 * (m.l + m.w) * m.h) - inputs.doors;
+      const litres = (wallArea / inputs.coverage) * inputs.coats;
+      return {qty: litres.toFixed(1), unit: 'litres', formula: `2×(${m.l}+${m.w})×${m.h}m = ${(2*(m.l+m.w)*m.h).toFixed(1)}m² − ${inputs.doors}m² openings × ${inputs.coats} coats ÷ ${inputs.coverage}m²/L = ${litres.toFixed(1)}L`};
+    }
+  },
+  ceiling: {
+    label: 'Ceiling boards',
+    unit: 'm²',
+    inputs: [{id:'waste', label:'Waste factor (%)', default:10}],
+    calc: (m, inputs) => {
+      if (!m.l || !m.w) return null;
+      const area = m.l * m.w;
+      const qty = area * (1 + inputs.waste / 100);
+      return {qty: qty.toFixed(2), unit: 'm²', formula: `${m.l}m × ${m.w}m = ${area.toFixed(2)}m² + ${inputs.waste}% waste = ${qty.toFixed(2)}m²`};
+    }
+  },
+  cladding: {
+    label: 'Wall cladding',
+    unit: 'm²',
+    inputs: [{id:'waste', label:'Waste factor (%)', default:12}, {id:'walls', label:'Number of walls to clad', default:4}],
+    calc: (m, inputs) => {
+      if (!m.l || !m.w || !m.h) return null;
+      const perim = inputs.walls <= 2 ? (inputs.walls === 1 ? m.l : m.l + m.w) : 2 * (m.l + m.w);
+      const area = perim * m.h;
+      const qty = area * (1 + inputs.waste / 100);
+      return {qty: qty.toFixed(2), unit: 'm²', formula: `Perimeter portion × ${m.h}m height = ${area.toFixed(2)}m² + ${inputs.waste}% waste = ${qty.toFixed(2)}m²`};
+    }
+  },
+  curtains: {
+    label: 'Curtains',
+    unit: 'linear metres',
+    inputs: [{id:'fullness', label:'Fullness ratio (e.g. 2.5)', default:2.5}, {id:'windows', label:'Number of windows', default:1}, {id:'drop', label:'Drop / height (m)', default:2.4}],
+    calc: (m, inputs) => {
+      if (!m.w) return null;
+      const fabricWidth = m.w * inputs.fullness * inputs.windows;
+      return {qty: fabricWidth.toFixed(1), unit: 'linear m', formula: `${m.w}m window × ${inputs.fullness} fullness × ${inputs.windows} windows = ${fabricWidth.toFixed(1)}m fabric (${inputs.drop}m drop)`};
+    }
+  },
+  decking: {
+    label: 'Decking',
+    unit: 'm²',
+    inputs: [{id:'waste', label:'Waste factor (%)', default:10}, {id:'boardWidth', label:'Board width (mm)', default:140}],
+    calc: (m, inputs) => {
+      if (!m.l || !m.w) return null;
+      const area = m.l * m.w;
+      const qty = area * (1 + inputs.waste / 100);
+      const boardCoverage = inputs.boardWidth / 1000;
+      const linearM = qty / boardCoverage;
+      return {qty: qty.toFixed(2), unit: 'm²', formula: `${m.l}m × ${m.w}m = ${area.toFixed(2)}m² + ${inputs.waste}% waste = ${qty.toFixed(2)}m² ≈ ${linearM.toFixed(1)} linear m (${inputs.boardWidth}mm boards)`};
+    }
+  }
+};
+
+// BUILD CALCULATOR PANEL HTML
+function buildCalcPanel(roomId, m) {
+  const cfg = MAT_CONFIG[m.material];
+  if (!cfg) return '';
+  const savedInputs = m.calcInputs || {};
+  const CALC_TIPS = {waste:'Extra material for cuts and breakage. 10% is standard; 15% for diagonal tile patterns.',tileSize:'Face dimension of your tile in cm. 60cm tiles = fewer cuts.',coverage:'Square metres one litre of paint covers. Check the tin — typically 8–12m² per coat.',coats:'Most surfaces need 2 coats. Dark colours or raw plaster may need 3.',doors:'Total area of windows and door openings to subtract (W × H each).',fullness:'Fabric gather ratio. 2.5× = full look; 1.5× = minimal.',windows:'Number of windows this measurement applies to.',drop:'Finished curtain length from track to floor. Measure carefully.',walls:'Walls to clad. 4 = full room; 1 = feature wall.',boardWidth:'Exposed face width per decking board in mm. 140mm is standard.'};
+  const inputsHtml = cfg.inputs.map(inp => `
+    <div class="fg">
+      <label style="display:flex;align-items:center;gap:0">${inp.label}${CALC_TIPS[inp.id] ? `<span class="tooltip-wrap"><span class="tooltip-q">?</span><span class="tooltip-tip">${CALC_TIPS[inp.id]}</span></span>` : ''}</label>
+      <input type="number" step="any" id="ci-${m.id}-${inp.id}" value="${savedInputs[inp.id] !== undefined ? savedInputs[inp.id] : inp.default}"
+        oninput="updateCalcResult('${roomId}','${m.id}')" style="font-size:13px;padding:6px 10px">
+    </div>`).join('');
+  const colClass = cfg.inputs.length >= 3 ? 'col3' : 'col2';
+  return `<div class="calc-panel" id="cp-${m.id}">
+    <div class="calc-panel-title">${cfg.label} calculator</div>
+    <div class="calc-row ${colClass}">${inputsHtml}</div>
+    <div class="calc-result" id="cr-${m.id}">
+      <span class="calc-result-label">Quantity needed</span>
+      <span><span class="calc-result-val" id="crv-${m.id}">—</span><span class="calc-result-unit" id="cru-${m.id}"></span></span>
+    </div>
+    <div class="calc-formula" id="crf-${m.id}"></div>
+    <div class="calc-actions">
+      <button class="btn btn-primary btn-sm" onclick="createOrderFromCalc('${roomId}','${m.id}')">→ Create order</button>
+      <button class="btn btn-sm" onclick="toggleCalc('${roomId}','${m.id}')">Close</button>
+    </div>
+  </div>`;
+}
+
+function updateCalcResult(roomId, measId) {
+  const r = state.rooms.find(x => x.id === roomId);
+  if (!r) return;
+  const m = r.measurements.find(x => x.id === measId);
+  if (!m || !m.material) return;
+  const cfg = MAT_CONFIG[m.material];
+  if (!cfg) return;
+  const inputs = {};
+  cfg.inputs.forEach(inp => {
+    const el = document.getElementById(`ci-${measId}-${inp.id}`);
+    inputs[inp.id] = el ? parseFloat(el.value) || inp.default : inp.default;
+  });
+  m.calcInputs = inputs;
+  save();
+  const result = cfg.calc(m, inputs);
+  const valEl = document.getElementById(`crv-${measId}`);
+  const unitEl = document.getElementById(`cru-${measId}`);
+  const fmlEl = document.getElementById(`crf-${measId}`);
+  if (result && valEl) {
+    valEl.textContent = result.qty;
+    if (unitEl) unitEl.textContent = ' ' + result.unit;
+    if (fmlEl) fmlEl.textContent = result.formula;
+  } else if (valEl) {
+    valEl.textContent = '—';
+    if (unitEl) unitEl.textContent = '';
+    if (fmlEl) fmlEl.textContent = 'Enter L, W, H measurements above to calculate';
+  }
+}
+
+function toggleCalc(roomId, measId) {
+  const r = state.rooms.find(x => x.id === roomId);
+  if (!r) return;
+  const m = r.measurements.find(x => x.id === measId);
+  if (!m) return;
+  m.calcOpen = !m.calcOpen;
+  save();
+  renderRooms();
+  if (m.calcOpen) {
+    setTimeout(() => {
+      updateCalcResult(roomId, measId);
+      const panel = document.getElementById(`calc-${measId}`);
+      if (panel) panel.style.display = 'block';
+    }, 50);
+  }
+}
+
+function createOrderFromCalc(roomId, measId) {
+  const r = state.rooms.find(x => x.id === roomId);
+  if (!r) return;
+  const m = r.measurements.find(x => x.id === measId);
+  if (!m || !m.material) return;
+  const cfg = MAT_CONFIG[m.material];
+  const inputs = m.calcInputs || {};
+  cfg.inputs.forEach(inp => { if (inputs[inp.id] === undefined) inputs[inp.id] = inp.default; });
+  const result = cfg.calc(m, inputs);
+  const qty = result ? result.qty + ' ' + result.unit : '';
+  const orderName = `${cfg.label} — ${m.label} (${qty})`;
+  const newOrder = {
+    id: uid(),
+    name: orderName,
+    supplierId: '',
+    roomId,
+    status: 'Quote',
+    budget: '',
+    eta: '',
+    notes: result ? result.formula : '',
+    photos: []
+  };
+  state.orders.push(newOrder);
+  save();
+  switchTab('orders');
+  renderOrders();
+  renderDashboard();
+  openOrderNotify(newOrder);
+}
+
+function openOrderNotify(order) {
+  const APP_URL = 'YOUR_APP_URL';
+  const supplier = order.supplierId ? getSupplier(order.supplierId) : null;
+  const roomName = order.roomId ? getRoomName(order.roomId) : '';
+  const sym = getCurrencySym();
+  const msgLines = [
+    `Hi${supplier ? ' ' + (supplier.contact || supplier.name) : ''},`,
+    '',
+    `We would like to place the following order:`,
+    `Item: ${order.name}`,
+    roomName ? `Room: ${roomName}` : '',
+    order.budget ? `Budget: ${sym}${parseFloat(order.budget).toLocaleString()}` : '',
+    order.eta ? `Required by: ${order.eta}` : '',
+    order.notes ? `Notes: ${order.notes}` : '',
+    '',
+    'Please confirm receipt of this order.',
+    '',
+    'Kind regards,',
+    'Kalanoro Lodge'
+  ].filter(l => l !== null && !(l === '' && false)).join('\n');
+
+
+  const waMsg = encodeURIComponent(msgLines);
+  const emailSubject = encodeURIComponent(`Order: ${order.name}`);
+  const emailBody = encodeURIComponent(msgLines);
+
+  document.getElementById('onm-order-name').textContent = order.name;
+
+  const waEl = document.getElementById('onm-wa');
+  const emailEl = document.getElementById('onm-email');
+
+  if (supplier && supplier.phone) {
+    waEl.href = `https://wa.me/${supplier.phone.replace(/[^0-9]/g,'')}?text=${waMsg}`;
+    waEl.style.opacity = '1';
+    waEl.style.pointerEvents = 'auto';
+  } else {
+    waEl.href = `https://wa.me/?text=${waMsg}`;
+    waEl.style.opacity = '0.6';
+  }
+
+  if (supplier && supplier.email) {
+    emailEl.href = `mailto:${supplier.email}?subject=${emailSubject}&body=${emailBody}`;
+    emailEl.style.opacity = '1';
+  } else {
+    emailEl.href = `mailto:?subject=${emailSubject}&body=${emailBody}`;
+    emailEl.style.opacity = '0.6';
+  }
+
+  document.getElementById('order-notify-modal').classList.remove('hidden');
+}
+
+function closeOrderNotify() {
+  document.getElementById('order-notify-modal').classList.add('hidden');
+}
+
+// LOCALSTORAGE
+const LS_KEY = 'lodge_pm_state';
+
+const DEFAULT_STATE = {
+  rooms:[
+    {id:'r1',name:'Dining area',notes:'Main communal eating space',expanded:true,measurements:[
+      {id:'m1',label:'Room footprint',l:8.4,w:5.2,h:3.6,notes:'',material:'',calcOpen:false,calcInputs:{}},
+      {id:'m2',label:'Dining table',l:2.8,w:1.0,h:0.75,notes:'Seats 10',material:'',calcOpen:false,calcInputs:{}},
+      {id:'m3',label:'Floor to ceiling fan',l:null,w:null,h:2.9,notes:'Fan clearance check',material:'',calcOpen:false,calcInputs:{}},
+    ]},
+    {id:'r2',name:'Main lounge',notes:'',expanded:false,measurements:[
+      {id:'m4',label:'Room footprint',l:7.0,w:6.0,h:3.4,notes:'',material:'',calcOpen:false,calcInputs:{}},
+      {id:'m5',label:'Main sofa (L-shape)',l:3.2,w:0.9,h:0.85,notes:'Corner left side',material:'',calcOpen:false,calcInputs:{}},
+    ]},
+    {id:'r3',name:'Suite 1',notes:'Premier suite, north-facing',expanded:false,measurements:[
+      {id:'m6',label:'Bedroom footprint',l:5.5,w:4.8,h:3.2,notes:'',material:'',calcOpen:false,calcInputs:{}},
+    ]},
+  ],
+  suppliers:[
+    {id:'s1',name:'Durban Home Imports',contact:'Priya Naidoo',email:'priya@dhi.co.za',phone:'+27 31 555 0123',location:'Durban',transit:21,route:'Durban → Beit Bridge → truck to camp',category:'Furniture',notes:'Reliable. 30-day payment terms. 8-week lead on custom.'},
+    {id:'s2',name:'Cape Craft & Textile',contact:'Marc Joubert',email:'marc@capecraft.co.za',phone:'+27 21 555 0456',location:'Cape Town',transit:28,route:'Cape Town → Durban → Beit Bridge → camp',category:'Textiles',notes:'Bespoke orders add 3–4 weeks. Sample approval required.'},
+    {id:'s3',name:'Harare Decor Co',contact:'Tendai Moyo',email:'tendai@heredecor.co.zw',phone:'+263 77 555 789',location:'Harare',transit:3,route:'Harare → truck to camp',category:'Art & decor',notes:'Local supplier. Fast turnaround. Payment on delivery.'},
+  ],
+  orders:[
+    {id:'o1',name:'Teak dining table ×1',supplierId:'s1',roomId:'r1',status:'Ordered',budget:1800,eta:'2025-09-10',notes:'Custom 2.8m length specified'},
+    {id:'o2',name:'Linen curtains — dining',supplierId:'s2',roomId:'r1',status:'Quote',budget:650,eta:'',notes:'Awaiting sample approval'},
+    {id:'o3',name:'Rattan lounge chairs ×4',supplierId:'s1',roomId:'r2',status:'In transit',budget:2200,eta:'2025-08-28',notes:'Shipped via Beit Bridge 4 Aug'},
+    {id:'o4',name:'Woven wall art ×2',supplierId:'s3',roomId:'r2',status:'Arrived',budget:380,eta:'2025-07-15',notes:'Arrived in good condition'},
+    {id:'o5',name:'Suite 1 bed frame',supplierId:'s1',roomId:'r3',status:'Quote',budget:1400,eta:'',notes:''},
+  ],
+  moodImages:[],
+  snags:[
+    {id:'sn1',desc:'Ceiling fan electrical fitting loose — dining',roomId:'r1',priority:'High',assignedTo:'Marco',done:false,photos:[]},
+    {id:'sn2',desc:'Lounge skirting board gap south wall',roomId:'r2',priority:'Low',assignedTo:'',done:false,photos:[]},
+    {id:'sn3',desc:'Suite 1 door hinge squeaks',roomId:'r3',priority:'Medium',assignedTo:'',done:true,photos:[]},
+  ],
+  notes:[],
+};
+
+let state = (() => {
+  try {
+    const saved = localStorage.getItem(LS_KEY);
+    return saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(DEFAULT_STATE));
+  } catch(e) { return JSON.parse(JSON.stringify(DEFAULT_STATE)); }
+})();
+
+let orderFilter = 'all';
+let moodFilter = 'all';
+
+const uid = () => 'id_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
+
+function save() {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(state));
+    document.getElementById('last-saved').textContent = 'Saved ' + new Date().toLocaleTimeString();
+  } catch(e) {
+    console.error('Save error:', e);
+  }
+}
+
+// HELPERS
+function getCurrencySym() {
+  if (activeCampId) {
+    const camps = getCamps();
+    const camp = camps.find(c => c.id === activeCampId);
+    if (camp && camp.currencySym) return camp.currencySym;
+  }
+  return currency.sym || '$';
+}
+function getActiveCamp() {
+  if (!activeCampId) return null;
+  return getCamps().find(c => c.id === activeCampId) || null;
+}
+function getRoomName(id) { const r = state.rooms.find(x=>x.id===id); return r ? r.name : '—'; }
+function getSupplier(id) { return state.suppliers.find(x=>x.id===id); }
+function getSupplierName(id) { const s=getSupplier(id); return s ? s.name : '—'; }
+function getTransitDays(sid) { const s=getSupplier(sid); return s ? s.transit+'d' : '?'; }
+function statusBadge(st) {
+  const m={'Quote':'badge-quote','Ordered':'badge-ordered','In transit':'badge-transit','Arrived':'badge-arrived'};
+  return `<span class="badge ${m[st]||''}">${st}</span>`;
+}
+function priorityBadge(p) {
+  const m={'High':'badge-high','Medium':'badge-medium','Low':'badge-low'};
+  return `<span class="badge ${m[p]||''}">${p}</span>`;
+}
+function toggleForm(id) {
+  const el=document.getElementById(id);
+  el.style.display=el.style.display==='none'?'block':'none';
+  if(id==='form-add-order'&&el.style.display!=='none'){fillSelect('no-supplier',state.suppliers,'name');fillSelect('no-room',state.rooms,'name');}
+  if(id==='form-add-mood'&&el.style.display!=='none') fillSelect('nm-room',state.rooms,'name');
+  if(id==='form-add-snag'&&el.style.display!=='none') fillSelect('sn-room',state.rooms,'name');
+}
+function fillSelect(selId, items, labelField, placeholder='— select —') {
+  const sel=document.getElementById(selId); if(!sel) return;
+  sel.innerHTML=`<option value="">${placeholder}</option>`+items.map(x=>`<option value="${x.id}">${x[labelField]}</option>`).join('');
+}
+
+function switchTab(t) {
+  document.querySelectorAll('.tab-btn').forEach((el,i)=>el.classList.toggle('active',['dashboard','rooms','orders','suppliers','gallery','snags'][i]===t));
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
+  document.getElementById('pane-'+t).classList.add('active');
+  ({dashboard:renderDashboard,rooms:renderRooms,orders:renderOrders,suppliers:renderSuppliers,gallery:renderMoodboard,snags:renderSnags})[t]?.();
+}
+
+function renderAll() { renderDashboard();renderRooms();renderOrders();renderSuppliers();renderMoodboard();renderSnags(); }
+function renderGallery() { renderMoodboard(); }
+function deleteNote(id) { state.notes = (state.notes||[]).filter(x=>x.id!==id); save(); renderDashboard(); }
+
+// DASHBOARD
+function renderDashboard() {
+  const sym = getCurrencySym();
+  const dashDateEl=document.getElementById('dash-date');if(dashDateEl)dashDateEl.textContent=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const arrived=state.orders.filter(o=>o.status==='Arrived').length;
+  const transit=state.orders.filter(o=>o.status==='In transit').length;
+  const totalBudget=state.orders.reduce((a,o)=>a+(parseFloat(o.budget)||0),0);
+  const arrivedBudget=state.orders.filter(o=>o.status==='Arrived').reduce((a,o)=>a+(parseFloat(o.budget)||0),0);
+  const openSnags=state.snags.filter(s=>!s.done).length;
+  document.getElementById('metrics').innerHTML=`
+    <div class="metric"><div class="metric-label">Total orders</div><div class="metric-val">${state.orders.length}</div><div class="metric-sub">${arrived} arrived</div></div>
+    <div class="metric"><div class="metric-label">In transit</div><div class="metric-val" style="color:var(--info)">${transit}</div><div class="metric-sub">en route to camp</div></div>
+    <div class="metric"><div class="metric-label">Budget committed</div><div class="metric-val" style="font-size:20px">${sym}${totalBudget.toLocaleString()}</div><div class="metric-sub" style="display:flex;flex-direction:column;gap:1px"><span style="color:var(--success)">${sym}${arrivedBudget.toLocaleString()} arrived</span><span>${state.rooms.length} rooms</span></div></div>
+    <div class="metric"><div class="metric-label">Open snags</div><div class="metric-val" style="color:${openSnags>0?'var(--danger)':'var(--success)'}">${openSnags}</div><div class="metric-sub">${state.snags.filter(s=>s.done).length} resolved</div></div>`;
+  const byStatus={'Quote':0,'Ordered':0,'In transit':0,'Arrived':0};
+  state.orders.forEach(o=>{byStatus[o.status]=(byStatus[o.status]||0)+1;});
+  document.getElementById('dash-orders').innerHTML=Object.entries(byStatus).map(([s,c])=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--sand)">${statusBadge(s)}<span style="font-family:var(--font-mono);font-size:13px">${c} item${c!==1?'s':''}</span></div>`).join('');
+  const inT=state.orders.filter(o=>o.status==='In transit');
+  document.getElementById('dash-transit').innerHTML=inT.length?inT.map(o=>`<div class="card-sm" style="margin-bottom:8px"><div style="font-weight:500;font-size:13px">${o.name}</div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px"><span style="font-size:12px;color:var(--mist)">${getSupplierName(o.supplierId)}</span><span class="transit-pill">${getTransitDays(o.supplierId)} to camp</span></div>${o.eta?`<div style="font-size:11px;color:var(--mist);margin-top:3px">ETA: ${o.eta}</div>`:''}</div>`).join(''):'<div class="empty-state" style="padding:16px 0"><div class="empty-icon">🚢</div>No items in transit</div>';
+  const bR={};state.orders.forEach(o=>{const n=getRoomName(o.roomId)||'Unassigned';bR[n]=(bR[n]||0)+(parseFloat(o.budget)||0);});
+  const maxB=Math.max(...Object.values(bR),1);
+  const totalEl=document.getElementById('dash-budget-total');
+  const convEl=document.getElementById('dash-budget-converted');
+  if(totalEl) totalEl.textContent=sym+totalBudget.toLocaleString();
+  if(convEl){
+    const ac=getActiveCamp();
+    if(ac&&ac.exchangeRate&&ac.currencyCode!=='USD'){
+      const usd=(totalBudget/ac.exchangeRate).toFixed(0);
+      convEl.textContent='≈ $'+parseInt(usd).toLocaleString()+' USD at rate '+ac.exchangeRate+' '+ac.currencyCode+'/USD';
+    } else { convEl.textContent=''; }
+  }
+  document.getElementById('dash-budget').innerHTML=Object.entries(bR).map(([r,b])=>`<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px"><span>${r}</span><span style="font-family:var(--font-mono)">${sym}${b.toLocaleString()}</span></div><div class="prog-bar"><div class="prog-fill" style="width:${Math.round(b/maxB*100)}%"></div></div></div>`).join('');
+  const os=state.snags.filter(s=>!s.done);
+  document.getElementById('dash-snags').innerHTML=os.length?os.map(s=>`<div style="display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--sand)">${priorityBadge(s.priority)}<span style="flex:1;font-size:13px">${s.desc}</span><span style="font-size:12px;color:var(--mist)">${getRoomName(s.roomId)}</span></div>`).join(''):'<div style="color:var(--mist);font-size:13px;padding:8px 0">No open snags — all clear!</div>';
+  const notes = state.notes || [];
+  const notesEl = document.getElementById('dash-notes');
+  if (notesEl) notesEl.innerHTML = notes.length ? notes.slice(0,10).map(n=>`<div class="note-card">
+    <div><div class="note-text">${n.text}</div><div class="note-meta">${n.roomId?`<span>${getRoomName(n.roomId)}</span>`:''}<span class="note-time">${new Date(n.ts).toLocaleDateString('en-GB',{day:'numeric',month:'short'})} ${new Date(n.ts).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}</span></div></div>
+    <button class="delete-x" onclick="deleteNote('${n.id}')">×</button>
+  </div>`).join('') : '<div style="color:var(--mist);font-size:13px;padding:8px 0">No notes yet — use the + button to add site notes.</div>';
+}
+
+// ROOMS
+function renderRooms() {
+  document.getElementById('rooms-list').innerHTML=state.rooms.map(room=>`
+    <div class="room-card">
+      <div class="room-hdr" onclick="toggleRoom('${room.id}')">
+        <span class="room-arrow ${room.expanded?'open':''}">▶</span>
+        <span class="room-name">${room.name}</span>
+        <span class="room-meta">${room.measurements.length} measurement${room.measurements.length!==1?'s':''}</span>
+        ${room.notes?`<span class="room-meta" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${room.notes}</span>`:''}
+        <button class="delete-x" onclick="event.stopPropagation();deleteRoom('${room.id}')">×</button>
+      </div>
+      ${room.expanded?`<div class="room-body">
+        <div class="meas-mat-row meas-hdr-row"><span>Label</span><span>Notes</span><span>L (m)</span><span>W (m)</span><span>H (m)</span><span>Material</span><span></span></div>
+        ${room.measurements.map(m=>`<div>
+          <div class="meas-mat-row meas-row">
+            <input value="${m.label||''}" onchange="updateMeas('${room.id}','${m.id}','label',this.value)">
+            <input value="${m.notes||''}" onchange="updateMeas('${room.id}','${m.id}','notes',this.value)" placeholder="notes">
+            <input type="number" value="${m.l??''}" onchange="updateMeas('${room.id}','${m.id}','l',this.value)" placeholder="—">
+            <input type="number" value="${m.w??''}" onchange="updateMeas('${room.id}','${m.id}','w',this.value)" placeholder="—">
+            <input type="number" value="${m.h??''}" onchange="updateMeas('${room.id}','${m.id}','h',this.value)" placeholder="—">
+            <select style="font-size:11px;padding:4px 24px 4px 6px" onchange="updateMeas('${room.id}','${m.id}','material',this.value)">
+              <option value="">— type —</option>
+              <option value="flooring" ${m.material==='flooring'?'selected':''}>Flooring</option>
+              <option value="tiles" ${m.material==='tiles'?'selected':''}>Tiles</option>
+              <option value="paint" ${m.material==='paint'?'selected':''}>Paint</option>
+              <option value="ceiling" ${m.material==='ceiling'?'selected':''}>Ceiling boards</option>
+              <option value="cladding" ${m.material==='cladding'?'selected':''}>Wall cladding</option>
+              <option value="curtains" ${m.material==='curtains'?'selected':''}>Curtains</option>
+              <option value="decking" ${m.material==='decking'?'selected':''}>Decking</option>
+            </select>
+            <button class="delete-x" onclick="deleteMeas('${room.id}','${m.id}')">×</button>
+          </div>
+          ${m.material?`<div id="calc-${m.id}" style="display:${m.calcOpen?'block':'none'}">${buildCalcPanel(room.id,m)}</div>`:''}
+          ${m.material?`<div style="padding:4px 0 2px"><button class="calc-btn ${m.calcOpen?'active':''}" onclick="toggleCalc('${room.id}','${m.id}')">${m.calcOpen?'▲ Hide calculator':'▼ Calculate materials'}</button></div>`:''}
+        </div>`).join('')}
+        <button class="btn btn-sm" style="margin-top:12px" onclick="addMeas('${room.id}')">+ Add measurement</button>
+      </div>`:''}
+    </div>`).join('')||'<div class="empty-state"><div class="empty-icon">🏕️</div><div>No rooms yet</div><button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="toggleForm(\"form-add-room\")">+ Add first room</button></div>';
+  // Re-trigger calc results for open panels
+  state.rooms.forEach(room => {
+    room.measurements.forEach(m => {
+      if (m.calcOpen && m.material) updateCalcResult(room.id, m.id);
+    });
+  });
+}
+
+function toggleRoom(id){const r=state.rooms.find(x=>x.id===id);if(r){r.expanded=!r.expanded;save();renderRooms();}}
+function deleteRoom(id){if(!confirm('Delete this room and all its measurements?'))return;state.rooms=state.rooms.filter(x=>x.id!==id);save();renderRooms();}
+function deleteMeas(rId,mId){const r=state.rooms.find(x=>x.id===rId);if(r){r.measurements=r.measurements.filter(m=>m.id!==mId);save();renderRooms();}}
+function updateMeas(rId,mId,field,val){
+  const r=state.rooms.find(x=>x.id===rId);if(!r)return;
+  const m=r.measurements.find(x=>x.id===mId);if(!m)return;
+  if(field==='material'){m[field]=val;m.calcOpen=false;}
+  else{m[field]=val===''?null:(field==='label'||field==='notes')?val:parseFloat(val);}
+  save();
+  if(field==='material') renderRooms();
+}
+function addMeas(rId){const r=state.rooms.find(x=>x.id===rId);if(r){r.measurements.push({id:uid(),label:'New measurement',l:null,w:null,h:null,notes:'',material:'',calcOpen:false,calcInputs:{}});save();renderRooms();}}
+function addRoom(){const name=document.getElementById('nr-name').value.trim();if(!name){alert('Please enter a room name.');return;}state.rooms.push({id:uid(),name,notes:document.getElementById('nr-notes').value,expanded:true,measurements:[]});document.getElementById('nr-name').value='';document.getElementById('nr-notes').value='';toggleForm('form-add-room');save();renderRooms();}
+
+// ORDERS
+function setOrderFilter(f,el){orderFilter=f;document.querySelectorAll('#order-filter-bar .filter-chip').forEach(c=>c.classList.remove('active'));if(el)el.classList.add('active');renderOrders();}
+function renderOrders(){
+  const sym = getCurrencySym();
+  const searchTerm = (document.getElementById('order-search')?.value||'').toLowerCase();
+  const filtered=state.orders.filter(o=>(orderFilter==='all'||o.status===orderFilter)&&(!searchTerm||o.name.toLowerCase().includes(searchTerm)||getSupplierName(o.supplierId).toLowerCase().includes(searchTerm)||getRoomName(o.roomId).toLowerCase().includes(searchTerm)));
+  document.getElementById('orders-list').innerHTML=filtered.length?filtered.map(o=>`<div class="order-card status-${o.status.replace(' ','-')}">
+    <div class="order-top"><div>
+      <div class="order-name">${o.name}</div>
+      <div class="order-meta">${statusBadge(o.status)}${o.roomId?`<span style="font-size:12px;color:var(--mist)">${getRoomName(o.roomId)}</span>`:''}${o.supplierId?`<span style="font-size:12px;color:var(--mist)">${getSupplierName(o.supplierId)}</span><span class="transit-pill">${getTransitDays(o.supplierId)} transit</span>`:''}${o.eta?`<span style="font-size:12px;color:var(--mist)">ETA: ${o.eta}</span>`:''}</div>
+      ${o.notes?`<div style="font-size:12px;color:var(--mist);margin-top:5px;font-style:italic">${o.notes}</div>`:''}
+      ${photoStrip(o.photos||[],'order',o.id)}
+    </div>
+    <div class="order-right">
+      <button class="delete-x" onclick="deleteOrder('${o.id}')">×</button>
+      ${o.budget?`<div class="order-budget">${sym}${parseFloat(o.budget).toLocaleString()}</div>`:''}
+      <select style="font-size:12px;width:130px;padding:5px 28px 5px 8px" onchange="updateOrderStatus('${o.id}',this.value)">
+        <option ${o.status==='Quote'?'selected':''}>Quote</option><option ${o.status==='Ordered'?'selected':''}>Ordered</option><option ${o.status==='In transit'?'selected':''}>In transit</option><option ${o.status==='Arrived'?'selected':''}>Arrived</option>
+      </select>
+    </div></div></div>`).join(''):'<div class="empty-state"><div class="empty-icon">📦</div><div>'+(orderFilter==="all"?'No orders yet — use + Add order or the quick-add button':'No orders in this category')+'</div>'+(orderFilter==="all"?'<button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="toggleForm(\\"form-add-order\\")">+ Add first order</button>':'')+'</div>';
+}
+function updateOrderStatus(id,val){const o=state.orders.find(x=>x.id===id);if(o){o.status=val;save();renderOrders();renderDashboard();}}
+function deleteOrder(id){if(!confirm('Delete this order?'))return;state.orders=state.orders.filter(x=>x.id!==id);save();renderOrders();}
+function addOrder(){const name=document.getElementById('no-name').value.trim();if(!name){alert('Please enter an item name.');return;}state.orders.push({id:uid(),name,supplierId:document.getElementById('no-supplier').value,roomId:document.getElementById('no-room').value,status:document.getElementById('no-status').value,budget:document.getElementById('no-budget').value,eta:document.getElementById('no-eta').value,notes:document.getElementById('no-notes').value,photos:[]});['no-name','no-budget','no-eta','no-notes'].forEach(i=>document.getElementById(i).value='');toggleForm('form-add-order');save();renderOrders();}
+
+// SUPPLIERS
+function renderSuppliers(){
+  const supSearch = (document.getElementById('supplier-search')?.value||'').toLowerCase();
+  const filteredSups = supSearch ? state.suppliers.filter(s=>s.name.toLowerCase().includes(supSearch)||s.location.toLowerCase().includes(supSearch)||(s.contact||'').toLowerCase().includes(supSearch)) : state.suppliers;
+  document.getElementById('suppliers-list').innerHTML=filteredSups.length?filteredSups.map(s=>`<div class="supplier-card">
+    <div class="supplier-top"><div><div class="supplier-name">${s.name}</div><div class="supplier-loc"><span class="tag-cat">${s.category}</span> &nbsp; ${s.location}</div></div>
+    <div style="display:flex;gap:8px;align-items:center"><span class="transit-pill">${s.transit} days to camp</span><button class="delete-x" onclick="deleteSupplier('${s.id}')">×</button></div></div>
+    ${s.route?`<div class="supplier-route">→ ${s.route}</div>`:''}
+    <div class="supplier-details">${s.contact?`<div class="supplier-detail"><strong>Contact</strong> ${s.contact}</div>`:''} ${s.email?`<div class="supplier-detail"><strong>Email</strong> <a href="mailto:${s.email}" style="color:var(--earth)">${s.email}</a></div>`:''} ${s.phone?`<div class="supplier-detail"><strong>Phone</strong> ${s.phone}</div>`:''}</div>
+    ${s.notes?`<div class="supplier-notes">${s.notes}</div>`:''}
+    <div class="supplier-contact-bar">
+      ${s.phone?`<a class="contact-btn whatsapp" href="https://wa.me/${s.phone.replace(/[^0-9]/g,'')}" target="_blank">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        WhatsApp</a>`:''}
+      ${s.email?`<a class="contact-btn email" href="mailto:${s.email}?subject=Order follow-up — Kalanoro Lodge&body=Hi ${s.contact||s.name},%0A%0AFollowing up regarding our recent order.%0A%0AKind regards">
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="16" height="12" rx="2"/><path d="M2 7l8 5 8-5"/></svg>
+        Email</a>`:''}
+      ${s.phone?`<a class="contact-btn" href="tel:${s.phone}">
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 3h3l1.5 4-2 1.5a11 11 0 005 5L13 11l4 1.5V16a1 1 0 01-1 1C7 17 3 10 3 4a1 1 0 011-1z"/></svg>
+        Call</a>`:''}
+    </div>
+  </div>`).join(''):'<div class="empty-state"><div class="empty-icon">🏭</div>'+(supSearch?'No suppliers match your search.':'No suppliers added yet. <button class="btn btn-primary btn-sm" onclick="toggleForm(\"form-add-supplier\")">+ Add first supplier</button>')+'</div>';
+}
+function deleteSupplier(id){if(!confirm('Delete this supplier?'))return;state.suppliers=state.suppliers.filter(x=>x.id!==id);save();renderSuppliers();}
+function addSupplier(){const name=document.getElementById('ns-name').value.trim();if(!name){alert('Please enter a supplier name.');return;}state.suppliers.push({id:uid(),name,contact:document.getElementById('ns-contact').value,email:document.getElementById('ns-email').value,phone:document.getElementById('ns-phone').value,location:document.getElementById('ns-location').value,transit:parseInt(document.getElementById('ns-transit').value)||0,route:document.getElementById('ns-route').value,category:document.getElementById('ns-cat').value,notes:document.getElementById('ns-notes').value});['ns-name','ns-contact','ns-email','ns-phone','ns-location','ns-transit','ns-route','ns-notes'].forEach(i=>document.getElementById(i).value='');toggleForm('form-add-supplier');save();renderSuppliers();}
+
+// MOOD BOARD
+function setMoodFilter(f,el){moodFilter=f;document.querySelectorAll('#mood-filter-bar .filter-chip').forEach(c=>c.classList.remove('active'));if(el)el.classList.add('active');renderMoodGrid();}
+function renderMoodboard(){
+  const bar=document.getElementById('mood-filter-bar');
+  bar.innerHTML='<button class="filter-chip'+(moodFilter==='all'?' active':'')+'" onclick="setMoodFilter(\'all\',this)">All rooms</button>'+state.rooms.map(r=>`<button class="filter-chip${moodFilter===r.id?' active':''}" onclick="setMoodFilter('${r.id}',this)">${r.name}</button>`).join('');
+  renderMoodGrid();
+}
+function renderMoodGrid(){
+  const imgs=state.moodImages.filter(i=>moodFilter==='all'||i.roomId===moodFilter);
+  document.getElementById('mood-grid').innerHTML=imgs.length?imgs.map(img=>`<div class="mood-card">${img.dataUrl?`<img src="${img.dataUrl}" class="mood-img" alt="${img.title}">`:'<div class="mood-placeholder"><span style="font-size:32px;opacity:0.3">🖼</span><span>No image</span></div>'}<div class="mood-body"><div class="mood-title">${img.title}</div><div class="mood-room">${getRoomName(img.roomId)}</div>${img.notes?`<div class="mood-notes">${img.notes}</div>`:''}</div><div class="mood-actions"><button class="btn btn-sm btn-danger" onclick="deleteMoodImg('${img.id}')">Remove</button></div></div>`).join(''):'<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🎨</div>Upload site progress photos, renders, and visual references here.</div>';
+}
+function deleteMoodImg(id){state.moodImages=state.moodImages.filter(x=>x.id!==id);save();renderMoodboard();}
+function addMoodImage(){const title=document.getElementById('nm-title').value.trim();if(!title){alert('Please add a title.');return;}const file=document.getElementById('nm-file').files[0];const roomId=document.getElementById('nm-room').value;const notes=document.getElementById('nm-notes').value;const doAdd=url=>{state.moodImages.push({id:uid(),roomId,title,notes,dataUrl:url||null});document.getElementById('nm-title').value='';document.getElementById('nm-notes').value='';document.getElementById('nm-file').value='';toggleForm('form-add-mood');save();renderMoodboard();};if(file){const r=new FileReader();r.onload=e=>doAdd(e.target.result);r.readAsDataURL(file);}else doAdd(null);}
+
+// SNAGS
+function renderSnags(){
+  // Build assignee filter bar
+  const assignees = [...new Set(state.snags.filter(s=>s.assignedTo).map(s=>s.assignedTo))];
+  const bar = document.getElementById('snag-assignee-bar');
+  if (bar) {
+    const current = bar.dataset.filter || 'all';
+    bar.innerHTML = ['all',...assignees].map(a=>`<button class="filter-chip${a===current?' active':''}" onclick="setSnagFilter('${a}',this)">${a==='all'?'All':a}</button>`).join('');
+  }
+  const snagFilter = bar?.dataset.filter || 'all';
+  const visSnags = snagFilter==='all' ? state.snags : state.snags.filter(s=>s.assignedTo===snagFilter);
+  const open=visSnags.filter(s=>!s.done);const done=visSnags.filter(s=>s.done);
+  const snagCountEl=document.getElementById('snag-open-count');if(snagCountEl)snagCountEl.textContent=`(${open.length}${snagFilter!=='all'?' — '+snagFilter:''})`;
+  const rl=items=>items.length?items.map(s=>`<div class="snag-item"><input type="checkbox" class="snag-check" ${s.done?'checked':''} onchange="toggleSnag('${s.id}')"><div class="snag-content"><div class="snag-desc ${s.done?'done':''}">${s.desc}</div><div class="snag-meta">${priorityBadge(s.priority)}<span style="font-size:12px;color:var(--mist)">${getRoomName(s.roomId)}</span>${s.assignedTo?`<span style="font-size:12px;color:var(--mist)">→ ${s.assignedTo}</span>`:''}${photoStrip(s.photos||[],'snag',s.id)}</div></div><button class="delete-x" onclick="deleteSnag('${s.id}')">×</button></div>`).join(''):`<div style='color:var(--mist);font-size:13px;padding:8px 0'>${state.snags.length===0?'No snags logged yet. <button class="btn btn-primary btn-sm" style="margin-left:8px" onclick="toggleForm(\'form-add-snag\')">+ Add first snag</button>':'None here — all clear.'}</div>`;
+  document.getElementById('snag-list-open').innerHTML=rl(open);
+  document.getElementById('snag-list-done').innerHTML=rl(done);
+}
+function setSnagFilter(f,el){const bar=document.getElementById('snag-assignee-bar');if(bar)bar.dataset.filter=f;renderSnags();}
+function toggleSnag(id){const s=state.snags.find(x=>x.id===id);if(s){s.done=!s.done;save();renderSnags();}}
+function deleteSnag(id){state.snags=state.snags.filter(x=>x.id!==id);save();renderSnags();}
+function addSnag(){const desc=document.getElementById('sn-desc').value.trim();if(!desc){alert('Please describe the snag.');return;}state.snags.push({id:uid(),desc,roomId:document.getElementById('sn-room').value,priority:document.getElementById('sn-priority').value,assignedTo:document.getElementById('sn-assign').value,done:false,photos:[]});document.getElementById('sn-desc').value='';document.getElementById('sn-assign').value='';toggleForm('form-add-snag');save();renderSnags();}
+
+
+// QUICK ADD
+let qaCat = 'order';
+function openQAModal() {
+  fillSelect('qa-room', state.rooms, 'name', '— no room —');
+  setQACat('order');
+  document.getElementById('qa-text').value = '';
+  document.getElementById('qa-modal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('qa-text').focus(), 80);
+}
+function closeQAModal() { document.getElementById('qa-modal').classList.add('hidden'); }
+function setQACat(cat) {
+  qaCat = cat;
+  ['order','snag','note'].forEach(c => document.getElementById('qac-'+c).classList.toggle('active', c===cat));
+  const labels = {order:'Item name', snag:'Issue description', note:'Note'};
+  const placeholders = {order:'e.g. Teak shelving ×2', snag:'e.g. Crack in north wall plaster', note:'e.g. Discussed tile colour with James — going with terracotta'};
+  document.getElementById('qa-text-label').textContent = labels[cat];
+  document.getElementById('qa-text').placeholder = placeholders[cat];
+}
+function submitQuickAdd() {
+  const text = document.getElementById('qa-text').value.trim();
+  if (!text) { document.getElementById('qa-text').focus(); return; }
+  const roomId = document.getElementById('qa-room').value;
+  if (qaCat === 'order') {
+    state.orders.push({id:uid(), name:text, supplierId:'', roomId, status:'Quote', budget:'', eta:'', notes:'', photos:[]});
+    save(); renderOrders(); renderDashboard();
+  } else if (qaCat === 'snag') {
+    state.snags.push({id:uid(), desc:text, roomId, priority:'Medium', assignedTo:'', done:false, photos:[]});
+    save(); renderSnags(); renderDashboard();
+  } else {
+    if (!state.notes) state.notes = [];
+    state.notes.unshift({id:uid(), text, roomId, ts: Date.now()});
+    save(); renderDashboard();
+  }
+  closeQAModal();
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeQAModal(); closeLightbox(); } });
+
+// LIGHTBOX
+function openLightbox(src) {
+  document.getElementById('lightbox-img').src = src;
+  document.getElementById('lightbox').classList.remove('hidden');
+}
+function closeLightbox() { document.getElementById('lightbox').classList.add('hidden'); }
+
+// PHOTO HELPERS
+function photoStrip(photos, entityType, entityId) {
+  if (!photos) photos = [];
+  const canAdd = photos.length < 3;
+  const thumbs = photos.map((p, i) => `<span class="photo-thumb-wrap">
+    <img class="photo-thumb" src="${p}" onclick="openLightbox('${p}')" title="Click to enlarge">
+    <button class="photo-del" onclick="deletePhoto('${entityType}','${entityId}',${i})">×</button>
+  </span>`).join('');
+  const addBtn = canAdd ? `<label class="photo-add-btn" title="Add photo (max 3)">
+    <span>+</span>
+    <input type="file" accept="image/*" style="display:none" onchange="addPhoto('${entityType}','${entityId}',this)">
+  </label>` : '';
+  return `<div class="photo-strip">${thumbs}${addBtn}</div>`;
+}
+
+function addPhoto(entityType, entityId, input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const entity = findEntity(entityType, entityId);
+    if (!entity) return;
+    if (!entity.photos) entity.photos = [];
+    if (entity.photos.length >= 3) return;
+    entity.photos.push(e.target.result);
+    save();
+    if (entityType === 'order') renderOrders();
+    else if (entityType === 'snag') renderSnags();
+  };
+  reader.readAsDataURL(file);
+}
+
+function deletePhoto(entityType, entityId, idx) {
+  const entity = findEntity(entityType, entityId);
+  if (!entity || !entity.photos) return;
+  entity.photos.splice(idx, 1);
+  save();
+  if (entityType === 'order') renderOrders();
+  else if (entityType === 'snag') renderSnags();
+}
+
+function findEntity(type, id) {
+  if (type === 'order') return state.orders.find(x => x.id === id);
+  if (type === 'snag') return state.snags.find(x => x.id === id);
+  return null;
+}
+
+
+// ── CAMP BUILDER ─────────────────────────────────────────────────────────────
+const CAMPS_KEY = 'lodge_camps';
+let activeCampId = null;
+
+function getCamps() {
+  try { return JSON.parse(localStorage.getItem(CAMPS_KEY) || '[]'); } catch(e) { return []; }
+}
+function saveCamps(camps) { localStorage.setItem(CAMPS_KEY, JSON.stringify(camps)); }
+
+function getCampState(campId) {
+  try {
+    const raw = localStorage.getItem('lodge_pm_' + campId);
+    return raw ? JSON.parse(raw) : null;
+  } catch(e) { return null; }
+}
+function saveCampState(campId, state) {
+  localStorage.setItem('lodge_pm_' + campId, JSON.stringify(state));
+}
+
+function campStats(campId) {
+  const s = getCampState(campId);
+  if (!s) return {orders:0, transit:0, snags:0, budget:0};
+  return {
+    orders: (s.orders||[]).length,
+    transit: (s.orders||[]).filter(o=>o.status==='In transit').length,
+    snags: (s.snags||[]).filter(x=>!x.done).length,
+    budget: (s.orders||[]).reduce((a,o)=>a+(parseFloat(o.budget)||0),0)
+  };
+}
+
+function renderCampGrid() {
+  const camps = getCamps();
+  const grid = document.getElementById('camp-grid');
+  if (!grid) return;
+  const sym = getCurrencySym();
+  grid.innerHTML = camps.map(camp => {
+    const st = campStats(camp.id);
+    const statusClass = 'camp-status-' + camp.status;
+    const statusLabel = camp.status.charAt(0).toUpperCase() + camp.status.slice(1);
+    return `<div class="camp-card" onclick="openCamp('${camp.id}')">
+      <div class="camp-card-accent" style="background:${camp.color}"></div>
+      <button class="camp-delete" style="right:34px" onclick="event.stopPropagation();openECModal('${camp.id}')">&#9881;</button>
+      <button class="camp-delete" onclick="event.stopPropagation();deleteCamp('${camp.id}')">&#215;</button>
+      <span class="${statusClass}">${statusLabel}</span>
+      <div class="camp-card-name">${camp.name}</div>
+      <div class="camp-card-loc">${camp.location||''}</div>
+      <div class="camp-card-stats">
+        <div class="camp-stat"><div class="camp-stat-val">${st.orders}</div><div class="camp-stat-label">Orders</div></div>
+        <div class="camp-stat"><div class="camp-stat-val" style="color:var(--info)">${st.transit}</div><div class="camp-stat-label">In transit</div></div>
+        <div class="camp-stat"><div class="camp-stat-val" style="color:${st.snags>0?'var(--danger)':'var(--success)'}">${st.snags}</div><div class="camp-stat-label">Snags</div></div>
+      </div>
+      <div style="font-size:11px;color:var(--mist);font-family:var(--font-mono)">${sym}${st.budget.toLocaleString()} committed</div>
+    </div>`;
+  }).join('') + `<div class="camp-card camp-card-new" onclick="openNCModal()">
+    <div style="font-size:32px;opacity:0.35">+</div>
+    <div style="font-size:13px;font-weight:500">New camp</div>
+  </div>`;
+}
+
+function openCamp(campId) {
+  activeCampId = campId;
+  const camps = getCamps();
+  const camp = camps.find(c => c.id === campId);
+  // Load or init camp state
+  const saved = getCampState(campId);
+  if (saved) {
+    state = saved;
+  } else {
+    state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+    saveCampState(campId, state);
+  }
+  // Update PM header name
+  const nameEl = document.getElementById('pm-camp-name');
+  if (nameEl && camp) {
+    const sym = camp.currencySym || '$';
+    const code = camp.currencyCode || 'USD';
+    nameEl.innerHTML = camp.name + ' <span>&#8212; Interior PM</span>';
+    const currIndicator = document.getElementById('pm-currency-indicator');
+    if (currIndicator) currIndicator.textContent = code + ' ' + sym;
+  }
+  // Switch views
+  document.getElementById('cb-view').classList.remove('active');
+  document.getElementById('pm-view').classList.add('active');
+  document.getElementById('pm-view').style.display = 'block';
+  renderAll();
+  // Tutorial
+  if (!localStorage.getItem('lodge_tutorial_pm_done')) showTutorial('pm');
+}
+
+function returnToDashboard() {
+  if (activeCampId) saveCampState(activeCampId, state);
+  activeCampId = null;
+  document.getElementById('pm-view').classList.remove('active');
+  document.getElementById('pm-view').style.display = 'none';
+  document.getElementById('cb-view').classList.add('active');
+  renderCampGrid();
+}
+
+let selectedColorEdit = '#8B6F47';
+function openECModal(campId) {
+  const camp = getCamps().find(c => c.id === campId);
+  if (!camp) return;
+  document.getElementById('ec-id').value = campId;
+  document.getElementById('ec-name').value = camp.name;
+  document.getElementById('ec-loc').value = camp.location || '';
+  document.getElementById('ec-status').value = camp.status || 'active';
+  document.getElementById('ec-rate').value = camp.exchangeRate || '';
+  selectedColorEdit = camp.color || '#8B6F47';
+  document.querySelectorAll('#ec-swatches .swatch').forEach(s => s.classList.toggle('selected', s.dataset.color === selectedColorEdit));
+  const currSel = document.getElementById('ec-currency');
+  const currVal = (camp.currencyCode || 'USD') + '|' + (camp.currencySym || '$');
+  for (let i = 0; i < currSel.options.length; i++) {
+    if (currSel.options[i].value === currVal) { currSel.selectedIndex = i; break; }
+  }
+  document.getElementById('ec-modal').classList.remove('hidden');
+}
+function closeECModal() { document.getElementById('ec-modal').classList.add('hidden'); }
+function selectSwatchEdit(el) {
+  selectedColorEdit = el.dataset.color;
+  document.querySelectorAll('#ec-swatches .swatch').forEach(s => s.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function saveEditCamp() {
+  const campId = document.getElementById('ec-id').value;
+  const camps = getCamps();
+  const idx = camps.findIndex(c => c.id === campId);
+  if (idx === -1) return;
+  const currVal = document.getElementById('ec-currency').value;
+  const [currCode, currSym] = currVal.split('|');
+  camps[idx] = { ...camps[idx],
+    name: document.getElementById('ec-name').value.trim() || camps[idx].name,
+    location: document.getElementById('ec-loc').value.trim(),
+    status: document.getElementById('ec-status').value,
+    color: selectedColorEdit,
+    currencyCode: currCode,
+    currencySym: currSym,
+    exchangeRate: parseFloat(document.getElementById('ec-rate').value) || null,
+  };
+  saveCamps(camps);
+  closeECModal();
+  renderCampGrid();
+}
+
+function deleteCamp(campId) {
+  if (!confirm('Delete this camp and all its data? This cannot be undone.')) return;
+  const camps = getCamps().filter(c => c.id !== campId);
+  saveCamps(camps);
+  localStorage.removeItem('lodge_pm_' + campId);
+  renderCampGrid();
+}
+
+// Override save() to scope to active camp
+const _originalSave = save;
+function save() {
+  if (activeCampId) {
+    try {
+      saveCampState(activeCampId, state);
+      document.getElementById('last-saved').textContent = 'Saved ' + new Date().toLocaleTimeString();
+    } catch(e) { console.error('Save error:', e); }
+  } else {
+    _originalSave();
+  }
+}
+
+// NEW CAMP MODAL
+let selectedColor = '#8B6F47';
+function openNCModal() {
+  document.getElementById('nc-name').value = '';
+  document.getElementById('nc-loc').value = '';
+  document.getElementById('nc-status').value = 'active';
+  document.getElementById('nc-rate').value = '';
+  document.getElementById('nc-currency').value = 'USD|$';
+  selectedColor = '#8B6F47';
+  document.querySelectorAll('#nc-swatches .swatch').forEach(s => s.classList.toggle('selected', s.dataset.color === selectedColor));
+  document.getElementById('nc-modal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('nc-name').focus(), 80);
+}
+function closeNCModal() { document.getElementById('nc-modal').classList.add('hidden'); }
+function selectSwatch(el) {
+  selectedColor = el.dataset.color;
+  document.querySelectorAll('#nc-swatches .swatch').forEach(s => s.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function createCamp() {
+  const name = document.getElementById('nc-name').value.trim();
+  if (!name) { document.getElementById('nc-name').focus(); return; }
+  const currVal = document.getElementById('nc-currency').value;
+  const [currCode, currSym] = currVal.split('|');
+  const camp = {
+    id: uid(),
+    name,
+    location: document.getElementById('nc-loc').value.trim(),
+    status: document.getElementById('nc-status').value,
+    color: selectedColor,
+    currencyCode: currCode,
+    currencySym: currSym,
+    exchangeRate: parseFloat(document.getElementById('nc-rate').value) || null,
+    created: Date.now()
+  };
+  const camps = getCamps();
+  camps.push(camp);
+  saveCamps(camps);
+  closeNCModal();
+  openCamp(camp.id);
+}
+
+// ── TUTORIALS ─────────────────────────────────────────────────────────────────
+function showTutorial(which) {
+  document.getElementById('tutorial-' + which).classList.remove('hidden');
+}
+function closeTutorial(which) {
+  document.getElementById('tutorial-' + which).classList.add('hidden');
+  const dontShow = document.getElementById(which + '-dont-show');
+  if (dontShow && dontShow.checked) localStorage.setItem('lodge_tutorial_' + which + '_done', '1');
+}
+
+// ── TOOLTIP HELPER ────────────────────────────────────────────────────────────
+function tt(tip) {
+  return `<span class="tooltip-wrap"><span class="tooltip-q">?</span><span class="tooltip-tip">${tip}</span></span>`;
+}
+
+// INIT
+document.addEventListener('DOMContentLoaded', () => {
+  // Start on Camp Builder dashboard
+  document.getElementById('pm-view').style.display = 'none';
+  renderCampGrid();
+  if (!localStorage.getItem('lodge_tutorial_cb_done')) showTutorial('cb');
+});
+</script>
+
+
+</div><!-- /pm-view -->
+<!-- LIGHTBOX -->
+<div class="photo-lightbox hidden" id="lightbox" onclick="closeLightbox()">
+  <img id="lightbox-img" src="" alt="">
+</div>
+
+<!-- QUICK ADD MODAL -->
+<div class="modal-overlay hidden" id="qa-modal">
+  <div class="modal-box">
+    <div class="modal-title">Quick add</div>
+    <div class="qa-cat-row">
+      <button type="button" class="qa-cat active" id="qac-order" onclick="setQACat('order')">Order</button>
+      <button type="button" class="qa-cat" id="qac-snag" onclick="setQACat('snag')">Snag</button>
+      <button type="button" class="qa-cat" id="qac-note" onclick="setQACat('note')">Note</button>
+    </div>
+    <div class="fg">
+      <label id="qa-text-label">Item name</label>
+      <input id="qa-text" placeholder="e.g. Teak shelving x2" autocomplete="off">
+    </div>
+    <div class="fg">
+      <label>Room (optional)</label>
+      <select id="qa-room"><option value="">— no room —</option></select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeQAModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitQuickAdd()">Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT CAMP MODAL -->
+<div class="modal-overlay hidden" id="ec-modal">
+  <div class="modal-box">
+    <div class="modal-title">Edit camp</div>
+    <input type="hidden" id="ec-id">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+      <div class="fg"><label>Camp name</label><input id="ec-name" autocomplete="off"></div>
+      <div class="fg"><label>Location</label><input id="ec-loc" autocomplete="off"></div>
+    </div>
+    <div class="fg" style="margin-bottom:14px">
+      <label>Status</label>
+      <select id="ec-status"><option value="planning">Planning</option><option value="active">Active</option><option value="complete">Complete</option></select>
+    </div>
+    <div class="fg" style="margin-bottom:14px">
+      <label>Accent colour</label>
+      <div class="swatch-row" id="ec-swatches">
+        <div class="swatch" data-color="#8B6F47" style="background:#8B6F47" onclick="selectSwatchEdit(this)"></div>
+        <div class="swatch" data-color="#3D5A3E" style="background:#3D5A3E" onclick="selectSwatchEdit(this)"></div>
+        <div class="swatch" data-color="#1A4B6B" style="background:#1A4B6B" onclick="selectSwatchEdit(this)"></div>
+        <div class="swatch" data-color="#8B3A2F" style="background:#8B3A2F" onclick="selectSwatchEdit(this)"></div>
+        <div class="swatch" data-color="#5A4A7A" style="background:#5A4A7A" onclick="selectSwatchEdit(this)"></div>
+        <div class="swatch" data-color="#2F6B5A" style="background:#2F6B5A" onclick="selectSwatchEdit(this)"></div>
+        <div class="swatch" data-color="#6B4A1A" style="background:#6B4A1A" onclick="selectSwatchEdit(this)"></div>
+        <div class="swatch" data-color="#1C4A3A" style="background:#1C4A3A" onclick="selectSwatchEdit(this)"></div>
+      </div>
+    </div>
+    <div class="fg" style="margin-bottom:14px">
+      <label>Project currency</label>
+      <select id="ec-currency">
+        <option value="USD|$">Zimbabwe — USD $</option>
+        <option value="ZAR|R">South Africa — ZAR R</option>
+        <option value="BWP|P">Botswana — BWP P</option>
+        <option value="MZN|MT">Mozambique — MZN MT</option>
+        <option value="ZMW|K">Zambia — ZMW K</option>
+        <option value="NAD|N$">Namibia — NAD N$</option>
+        <option value="SZL|E">Eswatini — SZL E</option>
+        <option value="LSL|M">Lesotho — LSL M</option>
+      </select>
+    </div>
+    <div class="fg" style="margin-bottom:20px">
+      <label style="display:flex;align-items:center">Exchange rate to USD <span class="tooltip-wrap"><span class="tooltip-q">?</span><span class="tooltip-tip">How many units of your currency equal 1 USD. E.g. 18.5 for ZAR. Leave blank if using USD.</span></span></label>
+      <input id="ec-rate" type="number" step="any" placeholder="e.g. 18.5">
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeECModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEditCamp()">Save changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ORDER NOTIFY MODAL -->
+<div class="modal-overlay hidden" id="order-notify-modal">
+  <div class="modal-box">
+    <div class="modal-title" style="margin-bottom:6px">Order created</div>
+    <div id="onm-order-name" style="font-size:13px;color:var(--mist);margin-bottom:18px"></div>
+    <div style="font-size:13px;font-weight:500;color:var(--night);margin-bottom:10px">Notify supplier?</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">
+      <a id="onm-wa" href="#" target="_blank" class="contact-btn whatsapp" style="justify-content:center;padding:10px 16px;font-size:13px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Send via WhatsApp
+      </a>
+      <a id="onm-email" href="#" class="contact-btn email" style="justify-content:center;padding:10px 16px;font-size:13px">
+        <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="16" height="12" rx="2"/><path d="M2 7l8 5 8-5"/></svg>
+        Send via Email
+      </a>
+    </div>
+    <div class="modal-actions" style="justify-content:flex-end">
+      <button class="btn" onclick="closeOrderNotify()">Skip</button>
+    </div>
+  </div>
+</div>
+
+<!-- TUTORIALS -->
+<div class="tutorial-overlay hidden" id="tutorial-cb">
+  <div class="tutorial-box">
+    <div class="tutorial-icon">&#127957;</div>
+    <div class="tutorial-title">Welcome to Camp Builder</div>
+    <div class="tutorial-body">
+      <strong>Camp Builder</strong> is your hub for managing multiple lodge construction projects.<br><br>
+      &#8594; <strong>Create a camp</strong> using the + card &#8212; name it, pick a location and colour.<br>
+      &#8594; <strong>Open a camp</strong> by clicking its card to enter the full project manager.<br>
+      &#8594; Each camp has its own rooms, orders, suppliers, snags and notes &#8212; completely separate.<br>
+      &#8594; The <strong>summary stats</strong> on each card update live so you can see project health at a glance.
+    </div>
+    <div class="tutorial-footer">
+      <label class="tutorial-skip-label"><input type="checkbox" id="cb-dont-show"> Don&#39;t show again</label>
+      <button class="btn btn-primary" onclick="closeTutorial('cb')">Got it</button>
+    </div>
+  </div>
+</div>
+<div class="tutorial-overlay hidden" id="tutorial-pm">
+  <div class="tutorial-box">
+    <div class="tutorial-icon">&#128296;</div>
+    <div class="tutorial-title">Project Manager</div>
+    <div class="tutorial-body">
+      <strong>Everything for one camp, in one place.</strong><br><br>
+      &#8594; <strong>Rooms</strong> &#8212; add spaces, log L&#215;W&#215;H, then hit Calculate materials for quantities.<br>
+      &#8594; <strong>Orders</strong> &#8212; track every item Quote &#8594; Ordered &#8594; In transit &#8594; Arrived. Add photos on delivery.<br>
+      &#8594; <strong>Suppliers</strong> &#8212; store contacts with transit times. WhatsApp or email them directly.<br>
+      &#8594; <strong>Snag list</strong> &#8212; punch list of issues before handover. Photo-document problems.<br>
+      &#8594; <strong>+ button</strong> (bottom right) &#8212; fastest way to log anything on site.
+    </div>
+    <div class="tutorial-footer">
+      <label class="tutorial-skip-label"><input type="checkbox" id="pm-dont-show"> Don&#39;t show again</label>
+      <button class="btn btn-primary" onclick="closeTutorial('pm')">Got it</button>
+    </div>
+  </div>
+</div>
+
+<!-- FAB -->
+<button class="fab" onclick="openQAModal()" title="Quick add">+</button>
+
+</body>
+</html>
